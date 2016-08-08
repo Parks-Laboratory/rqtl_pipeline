@@ -251,11 +251,25 @@ class Individual_averaged(Individual):
 	
 	def average(self, phenotype_values):
 		'''Returns average of a list of (phenotype) values.'''
-		sum_of_phenotype_values = 0
+		sum_of_phenotype_values = Decimal('0')
+		num_phenotypes = Decimal('0')
+		min_significant_figures = Decimal('+Inf')
+		decimal_point = '.'
 		for phenotype_value in phenotype_values:
-			sum_of_phenotype_values = sum_of_phenotype_values + float(phenotype_value)
+			# find operand with fewest significant figures
+			num_sigfigs = len(phenotype_value)
+			if decimal_point in phenotype_value:
+				num_sigfigs = num_sigfigs - 1
+			if num_sigfigs < min_significant_figures:
+				min_significant_figures = num_sigfigs
+			
+			# add value to sum
+			sum_of_phenotype_values = sum_of_phenotype_values + Decimal(phenotype_value)
+			num_phenotypes = num_phenotypes + 1
 		
-		return(sum_of_phenotype_values / len(phenotype_values) )
+		# calculate average, round based on min_significant_figures
+		average = round( sum_of_phenotype_values / num_phenotypes, min_significant_figures )
+		return( str(average) )
 		
 		
 class Strains(object):
