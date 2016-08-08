@@ -317,11 +317,12 @@ class Strains(object):
 	
 def is_numeric(string):
 	try:
-		float(string)
+		Decimal(string)
 		return(True)
 	except ValueError:
 		return(False)
 
+		
 def round_sigfigs(value, target_num_sigfigs):
 	'''Templated on Evgeny's at http://stackoverflow.com/questions/3410976/how-to-round-a-number-to-significant-figures-in-python'''
 	current_num_sigfigs = 1
