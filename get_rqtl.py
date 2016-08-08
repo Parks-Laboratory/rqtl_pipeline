@@ -319,7 +319,7 @@ def is_numeric(string):
 	try:
 		Decimal(string)
 		return(True)
-	except ValueError:
+	except InvalidOperation:
 		return(False)
 
 		
