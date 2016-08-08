@@ -22,6 +22,8 @@ import os
 import sys
 import time
 import string
+from decimal import *
+from math import *
 
 #######################################################
 ##   Global fields (do not change):
@@ -251,7 +253,7 @@ class Individual_averaged(Individual):
 	
 	def average(self, phenotype_values):
 		'''Returns average of a list of (phenotype) values.'''
-		sum_of_phenotype_values = Decimal('0')
+		sum_phenotype_values = Decimal('0')
 		num_phenotypes = Decimal('0')
 		min_significant_figures = Decimal('+Inf')
 		decimal_point = '.'
@@ -264,11 +266,12 @@ class Individual_averaged(Individual):
 				min_significant_figures = num_sigfigs
 			
 			# add value to sum
-			sum_of_phenotype_values = sum_of_phenotype_values + Decimal(phenotype_value)
+			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
 			num_phenotypes = num_phenotypes + 1
 		
 		# calculate average, round based on min_significant_figures
-		average = round( sum_of_phenotype_values / num_phenotypes, min_significant_figures )
+		average = round_sigfigs( sum_phenotype_values / num_phenotypes, min_significant_figures )
+		# find out if answer has a decimal poin
 		return( str(average) )
 		
 		
@@ -318,6 +321,15 @@ def is_numeric(string):
 		return(True)
 	except ValueError:
 		return(False)
+
+def round_sigfigs(value, target_num_sigfigs):
+	'''Templated on Evgeny's at http://stackoverflow.com/questions/3410976/how-to-round-a-number-to-significant-figures-in-python'''
+	current_num_sigfigs = 1
+	if value != 0:
+		current_num_sigfigs = ceil(log10(abs(value)))
+	num_figures_to_round_off = current_num_sigfigs - target_num_sigfigs
+	return( round(value, -num_figures_to_round_off) )
+	
 	
 def sanitize(dirty_string):
 	'''Remove undesirable characters from a string'''
