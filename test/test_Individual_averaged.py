@@ -5,32 +5,32 @@ class test__init__(unittest.TestCase):
 	def setUp(self):
 		self.line = ['iid','strain','male']
 	
-	def test_normal__init__(self):
-		self.individual = Individual(self.line)
-
+	def test_minimal(self):
+		self.individual_averaged = Individual_averaged(self.line, 'female')
+		self.assertTrue(self.individual_averaged.is_female())
+		self.individual_averaged = Individual_averaged(self.line, 'male')
+		self.assertTrue(self.individual_averaged.is_male())
+		
 		
 class test_add(unittest.TestCase):
 	def setUp(self):
 		self.line = ['iid','strain','male']
-		self.individual = Individual(self.line)
+		self.individual_averaged = Individual_averaged(self.line, 'female')
 		
-	def test_add(self):
-		self.individual.add(self.line)
-	
-	
+	def test_minimal(self):
+		self.individual_averaged.add(self.line)
+			
+			
+			
+# class test_average(unittest.TestCase):
+			
+			
 if __name__ == '__main__':
-	suite_names = [test__init__, test_add]
+	suite_names = [test__init__, test_add, test_average]
 	all_suites = []
 	for suite_name in suite_names:
 		suites.add(unittest.TestLoader().loadTestsFromTestCase(suite_name))
 	all_tests = unittest.TestSuite(all_suites)
 	unittest.TextTestRunner(verbosity=2).run(all_tests)
-    # unittest.main()	
-	
-# individ_test_case = test_Individual_averaged('Test_replace_missing_value')	
-
-
-# individ_test_suite = TestSuite()
-# individ_test_suite.addTest()	
 
 	

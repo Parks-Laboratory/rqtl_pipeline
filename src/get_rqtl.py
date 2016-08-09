@@ -212,7 +212,10 @@ class Individual(object):
 		return( self.sex == sex_label_as_numeric[male] )
 				
 	def replace_missing_value(value):
-		'''Return value if it is numeric, otherwise return string indicating missing-value'''
+		'''
+		Return value if it is numeric, otherwise return string indicating 
+		missing-value. Will return missing value for fractions.
+		'''
 		if not is_numeric(value):
 			value = Individual.missing_value
 		return(value)
