@@ -8,8 +8,10 @@ Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <outpu
 		-file containing lines of phenotype data: 
 			-format: Mouse ID,id,Sex,<phenotype 1>,...,<phenotype 2>
 	Output: 
-		<main_geno_filename_prefix><geno_filename_suffix>	e.g. "main_geno_csvsr.csv"
-		<female pheno_filename_prefix><pheno_filename_suffix>		e.g. "female_pheno_csvsr.csv"
+		<main_geno_filename_prefix><geno_filename_suffix>	
+			e.g. "main_geno_csvsr.csv"
+		<female pheno_filename_prefix><pheno_filename_suffix>		
+			e.g. "female_pheno_csvsr.csv"
 		<male pheno_filename_prefix><pheno_filename_suffix>
 		<hetero pheno_sexes_filename_prefix><pheno_filename_suffix>
 					
@@ -524,7 +526,7 @@ def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 	# work left to right across iids, accessing their phenotypes as you go and	
 	# use condition to write blank instead of data when appropriate
 	for row_index, row_name in enumerate(Individual.row_names):
-		# don't list sex or id labels in file containing only the list of phenotypes:
+		# for file containing only the list of phenotypes, don't include sex or id labels:
 		if row_name not in Individual.special_rows:
 			phenotype_list_builder.row.append(row_name)
 			phenotype_list_builder.append( phenotype_list_builder.row )
