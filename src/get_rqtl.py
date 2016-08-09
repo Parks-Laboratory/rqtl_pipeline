@@ -242,21 +242,27 @@ class Individual_averaged(Individual):
 		self.rows.append(self.iid)
 	
 	def add(self, line):
-		'''Add phenotypes to existing averaged individual'''
+		'''
+		Append phenotypes to existing list of phenotypes for an individual
+		of a specific strain of a specific sex
+		'''
 		for phenotype_index, phenotype_value in enumerate(line[Individual_averaged.first_phenotype_column: ]):
 			# replace non-numeric phenotype value with string indicating missing-value
 			phenotype_value = Individual_averaged.replace_missing_value(phenotype_value)
 			
-			# add value only if it is a number
+			# append value only if it is a number
 			if phenotype_value != Individual_averaged.missing_value:
-				# add value to existing value
+				# append value to existing list of values
 				existing_phenotype_value = self.rows[phenotype_index]
 				if(existing_phenotype_value == Individual_averaged.missing_value):
 					self.rows[phenotype_index] = []
 				self.rows[phenotype_index].append(phenotype_value)
 	
 	def average(self, phenotype_values):
-		'''Returns average of a list of (phenotype) values.'''
+		'''
+		Returns average of a list of phenotype values. The parameter is used to
+		simplify the process of specifying which 
+		'''
 		sum_phenotype_values = Decimal('0')
 		num_phenotypes = Decimal('0')
 		min_significant_figures = Decimal('+Inf')
@@ -328,7 +334,11 @@ def is_numeric(string):
 
 		
 def round_sigfigs(value, target_num_sigfigs):
-	'''Templated on Evgeny's at http://stackoverflow.com/questions/3410976/how-to-round-a-number-to-significant-figures-in-python'''
+	'''
+	Given a value, rounds it to the number of significant figures specified by
+	target_num_sigfigs.
+	Templated on Evgeny's at http://stackoverflow.com/questions/3410976/how-to-round-a-number-to-significant-figures-in-python
+	'''
 	current_num_sigfigs = 1
 	if value != 0:
 		current_num_sigfigs = ceil(log10(abs(value)))
@@ -541,18 +551,16 @@ def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 					# append row_names prior to appending data for first individual
 					if pheno_file_builder.row == []:
 						pheno_file_builder.row.append(row_name)
-					# use values in file if individual belongs to same sex as pheno_file_builder
+					'''row_value is a single value for non-averaged inidividual
+					and a list of not-yet-averaged values for an averaged individual'''
 					row_value = individual.rows[row_index]
-					write_row_value = pheno_file_builder.do_sexes_match(individual)
-					write_row_value = write_row_value or row_name in Individual.special_rows
-					write_row_value = write_row_value and not row_value == Individual.missing_value 
+					write_row_value = ( pheno_file_builder.do_sexes_match(individual)
+						or row_name in Individual.special_rows
+						and not row_value == Individual.missing_value )
 					if ( write_row_value ):
 						if use_average_by_strain and row_name not in Individual_averaged.special_rows:
-							try:
-								pheno_file_builder.row.append(individual.average(row_value))
-							except TypeError:
-								sys.exit('Arithmetic operation ' + str(row_value) + 
-								'/' + str(individual.num_phenotypes) + ' could not be performed')
+							# pass list of not-yet-averaged phenotype values
+							pheno_file_builder.row.append(individual.average(row_value))
 						else:
 							pheno_file_builder.row.append(row_value)
 					else:
