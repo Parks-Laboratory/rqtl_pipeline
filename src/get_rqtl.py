@@ -48,7 +48,7 @@ sex_label_as_numeric = {female:0,male:1}		# maps sex labels to numeric indicator
 #######################################################
 ##   Parameters set by user (change as desired/needed):
 #######################################################
-server_name = 'PARKSLAB'
+sql_server_name = 'PARKSLAB'
 db = 'HMDP'
 genotype_source = '[dbo].[rqtl_csvsr_geno_format]'	# table or view name that provides data
 marker_order_source = '[dbo].[genotypes]'			# table that provides order of markers
@@ -92,6 +92,7 @@ class File_builder(object):
 	
 	def append(self, row):
 		'''Adds a row returned by query to the linebuffer'''
+		sys.exit('Error: append() is abstract function')
 		return
 	
 	def write_linebuffer(self):
@@ -99,16 +100,11 @@ class File_builder(object):
 		self.file.write('\n'.join(self.linebuffer) + '\n')
 		self.file.flush()
 		self.linebuffer = []
-	def write_column_labels(self, column_labels):
-		'''Sanitize strain names, remove marker_chromosome and 
-		centiMorgan column names to match R/QTL input format.
-		'''
-		return
 
 		
 class Geno_file_builder(File_builder):
 	'''
-	Deals with formatting useful for building files where trait not averaged by strain
+	Deals with formatting useful for building genotype files
 	'''
 	def __init__(self, name, fn_template, data_by_strain):
 		'''data_by_strain: an object of class Strains'''
@@ -163,6 +159,9 @@ class Geno_file_builder(File_builder):
 		
 		
 class Pheno_file_builder(File_builder):
+	'''
+	Deals with formatting useful for building phenotype files
+	'''
 	def __init__(self, sex, fn_template):
 		name = sex	# default for pheno file builder that creates only a list of phenotype names
 		if sex in pheno_filename_prefixes:
@@ -425,7 +424,7 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 		files[filename].open()
 	
 	# connect to database
-	connection = pyodbc.connect(SERVER=server_name
+	connection = pyodbc.connect(SERVER=sql_server_name
 		,DATABASE=db
 		,DRIVER='{SQL Server Native Client 11.0}'
 		,Trusted_Connection='Yes')
