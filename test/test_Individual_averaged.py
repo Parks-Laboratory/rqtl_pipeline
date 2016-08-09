@@ -19,8 +19,10 @@ class test_add(unittest.TestCase):
 	
 	
 if __name__ == '__main__':
-	suite = unittest.TestLoader().loadTestsFromTestCase(test__init__)
-	unittest.TextTestRunner(verbosity=2).run(suite)
+	suite__init__ = unittest.TestLoader().loadTestsFromTestCase(test__init__)
+	suite_add = unittest.TestLoader().loadTestsFromTestCase(test_add)
+	alltests = unittest.TestSuite([suite__init__, suite_add])
+	unittest.TextTestRunner(verbosity=2).run(alltests)
     # unittest.main()	
 	
 # individ_test_case = test_Individual_averaged('Test_replace_missing_value')	
