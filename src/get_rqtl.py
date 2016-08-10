@@ -336,19 +336,6 @@ def is_numeric(string):
 		return(False)
 
 
-def round_sigfigs(value, target_num_sigfigs):
-	'''
-	Given a value, rounds it to the number of significant figures specified by
-	target_num_sigfigs.
-	Templated on Evgeny's at http://stackoverflow.com/questions/3410976/how-to-round-a-number-to-significant-figures-in-python
-	'''
-	current_num_sigfigs = 1
-	if value != 0:
-		current_num_sigfigs = ceil(log10(abs(value)))
-	num_figures_to_round_off = current_num_sigfigs - target_num_sigfigs
-	return( round(value, -num_figures_to_round_off) )
-
-
 def sanitize(dirty_string):
 	'''Remove undesirable characters from a string'''
 	output_string = dirty_string

@@ -25,43 +25,6 @@ class test_add(unittest.TestCase):
 		self.individual_averaged.add(self.line)
 
 
-class test_round_sigfigs(unittest.TestCase):
-	def setUp(self):
-		self.integer_values = [3434, 343, 34, -34,  39723324]
-		self.decimal_values = [343.3, .34, -.34, .32437932478327,]
-
-	def assertRoundEqual(self, value, target_num_sigfigs, correct_rounding):
-		self.assertEqual( str(round_sigfigs(value, target_num_sigfigs)), str(correct_rounding))
-
-	def test_integer_values(self):
-		# normal cases
-		self.assertRoundEqual(343, 3, '343' )
-		self.assertRoundEqual(343, 2, '340' )
-		self.assertRoundEqual(343, 1, '300' )
-		self.assertRoundEqual(343, 0, '0' )
-
-		# special cases
-		self.assertRoundEqual(343, 4, '343' )
-		self.assertRoundEqual(397, 2, '400' )
-
-	def test_decimal_values(self):
-		'''
-		Stuck getting 1 decimal place of precision, but given that R/QTL
-		coerces all values for a given trait to have same decimal precision,
-		nit-picking over this is waste of effort.
-		'''
-		self.assertRoundEqual(34.3, 2, '34.0' )
-		self.assertRoundEqual(347.3, 2, '350.0' )
-		self.assertRoundEqual(347345.3, 2, '350000.0' )
-		self.assertRoundEqual(3.473453, 3, '3.47' )
-		self.assertRoundEqual(3.473453, 4, '3.473' )
-		# self.assertRoundEqual(3.47345, 5, '3.4734' )
-
-	def demonstrate_unavoidable_behavior(self):
-		self.assertRoundEqual(0.000, 3, '0.0' )
-		self.assertRoundEqual(0, 1, '0' )
-
-
 class test_average(unittest.TestCase):
 	def setUp(self):
 		self.line = ['iid','strain','male']
