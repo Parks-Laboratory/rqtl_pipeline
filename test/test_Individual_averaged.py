@@ -30,9 +30,16 @@ class test_average(unittest.TestCase):
 		self.line = ['iid','strain','male']
 		self.individual_averaged = Individual_averaged(self.line, 'female')
 
+	def assertAvgEqual(self, values_to_average, true_avg):
+		self.assertEqual(self.individual_averaged.average(values_to_average), true_avg)
+
 	def test(self):
 		# average = 24.3
-		self.assertEqual('2E+1' , self.individual_averaged.average(['23.3','3','46.6']))
+		self.assertAvgEqual(['23.3','3','46.6'], '2E+1')
+		# check that a 5 rounds last significant digit up if that digit is odd,
+		# but does merely truncates everything after that digit if it's even
+		self.assertAvgEqual(['2.55','1'], '2')		# avg = 2.55, sigfigs = 1
+		self.assertAvgEqual(['3.5','2.0','2.15'], '2.6')	# avg = 2.55, sigfigs = 2
 		values = ['-']
 
 

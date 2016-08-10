@@ -263,6 +263,8 @@ class Individual_averaged(Individual):
 		Returns average of a list of phenotype values. The parameter is used to
 		simplify the process of specifying which
 		'''
+		# context set globally for all Decimal arithmetic, not just for this instance of method
+		setcontext( Context( prec=None, rounding=None ) )
 		if len(phenotype_values) == 1:
 			return( phenotype_values[0] )
 		sum_phenotype_values = Decimal('0')
@@ -280,9 +282,9 @@ class Individual_averaged(Individual):
 			# add value to sum
 			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
 			num_phenotypes = num_phenotypes + 1
-
-		# calculate average, round based on min_significant_figures
+		# context set globally for all Decimal arithmetic, not just for this instance of method
 		setcontext( Context( prec=min_significant_figures, rounding=ROUND_HALF_EVEN) )
+		# calculate average, round based on min_significant_figures
 		average = sum_phenotype_values / num_phenotypes
 		# find out if answer has a decimal poin
 		return( str(average) )
