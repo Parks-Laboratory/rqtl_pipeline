@@ -55,8 +55,7 @@ class test_round_sigfigs(unittest.TestCase):
 		self.assertRoundEqual(347345.3, 2, '350000.0' )
 		self.assertRoundEqual(3.473453, 3, '3.47' )
 		self.assertRoundEqual(3.473453, 4, '3.473' )
-		self.assertRoundEqual(3.473453, 5, '3.4735' )
-		self.assertRoundEqual(3.473553, 5, '3.4734' )
+		# self.assertRoundEqual(3.47345, 5, '3.4734' )
 
 	def demonstrate_unavoidable_behavior(self):
 		self.assertRoundEqual(0.000, 3, '0.0' )

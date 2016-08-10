@@ -282,7 +282,8 @@ class Individual_averaged(Individual):
 			num_phenotypes = num_phenotypes + 1
 
 		# calculate average, round based on min_significant_figures
-		average = round_sigfigs( sum_phenotype_values / num_phenotypes, min_significant_figures )
+		setcontext( Context( prec=min_significant_figures, rounding=ROUND_HALF_EVEN) )
+		average = sum_phenotype_values / num_phenotypes
 		# find out if answer has a decimal poin
 		return( str(average) )
 
