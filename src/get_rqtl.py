@@ -267,8 +267,10 @@ class Individual_averaged(Individual):
 		'''
 		# context set globally for all Decimal arithmetic, not just for this instance of method
 		setcontext( Context( prec=None, rounding=None ) )
-		if len(phenotype_values) == 1:
-			return( phenotype_values[0] )
+		# check if no values to average
+		if len(phenotype_values) == 1 and phenotype_values[0] == Individual_averaged.missing_value:
+			return( Individual_averaged.missing_value )
+
 		sum_phenotype_values = Decimal('0')
 		num_phenotypes = Decimal('0')
 		min_significant_figures = Decimal('+Inf')
@@ -286,7 +288,6 @@ class Individual_averaged(Individual):
 		# calculate average, round based on min_significant_figures
 		average = sum_phenotype_values / num_phenotypes
 		# find out if answer has a decimal poin
-		print('\t', min_significant_figures,'\t', str(average))
 		return( str(average) )
 
 
@@ -335,10 +336,20 @@ def num_sigfigs(value):
 	Ignores leading zeroes, minus-sign, non-numerics following number
 	then returns count
 	'''
-	# first, get only values >=abs(1) or only values w/ decimal digits
-	# and clear minus-sign, leading zeroes, and any trailing characters like E+3
-	parsed_value = re.sub(r'-*0*((\d+\.?\d*)|(\d*\.\d+)).*', r'\1', value)
-	# then, remove decimal point, if it exists
+	# remove scientific notation characters
+		# -03.05E+4 -> 03.05
+	parsed_value = re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value)
+	# remove leading zeroes to left of decimal point, keeping at most 1 zero
+		# e.g. -03.05E+4 -> 305E+4	or	05 -> 5		or	0.4 -> .4	or	00 -> 0
+	parsed_value = re.sub(r'^0*(\d.*)$', r'\1', parsed_value)
+	# remove leading zeroes to right of decimal point, plus any immediately to
+	# the left of decimal point, if value < 1
+		# e.g. .05E+4 -> 5E+4    or   0.01 -> .1
+	parsed_value = re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', parsed_value)
+	# remove trailing zeroes to right of integer w/ no decimal point
+		# e.g. 100 -> 1   but   100. -> 100.
+	parsed_value = re.sub(r'^([1-9]+)0*$', r'\1', parsed_value)
+	# remove decimal point
 	parsed_value = re.sub(r'\.', r'', parsed_value)
 	return( len(parsed_value) )
 
