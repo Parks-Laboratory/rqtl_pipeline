@@ -272,7 +272,6 @@ class Individual_averaged(Individual):
 		sum_phenotype_values = Decimal('0')
 		num_phenotypes = Decimal('0')
 		min_significant_figures = Decimal('+Inf')
-		decimal_point = '.'
 		for phenotype_value in phenotype_values:
 			# find operand with fewest significant figures
 			sigfig_count = num_sigfigs(phenotype_value)
@@ -287,6 +286,7 @@ class Individual_averaged(Individual):
 		# calculate average, round based on min_significant_figures
 		average = sum_phenotype_values / num_phenotypes
 		# find out if answer has a decimal poin
+		print('\t', min_significant_figures,'\t', str(average))
 		return( str(average) )
 
 

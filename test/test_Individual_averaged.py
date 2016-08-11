@@ -24,6 +24,27 @@ class test_add(unittest.TestCase):
 	def test_minimal(self):
 		self.individual_averaged.add(self.line)
 
+class test_num_sigfigs(unittest.TestCase):
+	'''Technically not a function of Individual_averaged class, but heavily used by it'''
+	def test_values_greater_than_or_equal_to_1(self):
+		self.assertEqual(num_sigfigs('1.5'), 2)
+		self.assertEqual(num_sigfigs('2'), 1)
+		self.assertEqual(num_sigfigs('-3'), 1)
+		self.assertEqual(num_sigfigs('05'), 1)
+
+	def test_values_less_than_1(self):
+		self.assertEqual(num_sigfigs('.5'), 1)
+		self.assertEqual(num_sigfigs('0.5'), 1)
+		self.assertEqual(num_sigfigs('0.000243'), 6)
+		self.assertEqual(num_sigfigs('.00003'), 5)
+
+	def test_scientific_notation(self):
+		self.assertEqual(num_sigfigs('05.5'), 2)
+		self.assertEqual(num_sigfigs('3E+5'), 1)
+		self.assertEqual(num_sigfigs('5E-7'), 1)
+		self.assertEqual(num_sigfigs('5.34E-7'), 3)
+		self.assertEqual(num_sigfigs('05.34E-7'), 3)
+		self.assertEqual(num_sigfigs('-05.34E-7'), 3)
 
 class test_average(unittest.TestCase):
 	def setUp(self):
@@ -37,8 +58,15 @@ class test_average(unittest.TestCase):
 		self.assertNotEqual(self.individual_averaged.average(values_to_average), true_avg)
 
 	def test_scientific_notation(self):
-		# average = 24.3
-		self.assertAvgEqual(['23.3','3','46.6'], '2E+1')
+		self.assertAvgEqual(['23.3','3','46.6'], '2E+1')		# average = 24.3, sigfigs = 1
+		self.assertAvgEqual(['-23.3','-3','-46.6'], '-2E+1')	# average = 24.3, sigfigs = 1
+		# self.assertAvgEqual(['.000233','.00003','.000466'], '0.00024')	# average = 24.3, sigfigs = 5
+		# self.assertAvgEqual(['-.000233','-.00003','-.000466'], '-0.00024')	# average = 24.3, sigfigs = 5
+
+	def test_decimal_values(self):
+		self.assertAvgEqual(['.233','.03','.466'], '0.24')	# average = 24.3, sigfigs = 1
+		self.assertAvgEqual(['-.233','-.03','-.466'], '-0.24')	# average = 24.3, sigfigs = 1
+		self.assertAvgEqual(['.0233','.003','.0466'], '0.024')	# average = 24.3, sigfigs = 5
 
 	def test_sigfigs_of_positive_values(self):
 		self.assertAvgEqual(['2.55','1'], '2')		# avg = 1.775, sigfigs = 1
@@ -56,6 +84,7 @@ class test_average(unittest.TestCase):
 		self.assertAvgEqual(['-2.550','-1.000'], '-1.775')	# avg = 1.775, sigfigs = 3
 		self.assertAvgEqual(['-2.55','-2.55'], '-2.55')	# avg = 1.775, sigfigs = 2
 
+	# def test_leading_zeroes(self)
 
 	def test_round_even_with_5(self):
 		# check that a 5 rounds last significant digit up if that digit is odd,
@@ -68,7 +97,7 @@ class test_average(unittest.TestCase):
 
 
 if __name__ == '__main__':
-	suite_names = [test__init__, test_add, test_average]
+	suite_names = [test__init__, test_add, test_num_sigfigs, test_average]
 	all_suites = []
 	for suite_name in suite_names:
 		suites.add(unittest.TestLoader().loadTestsFromTestCase(suite_name))
