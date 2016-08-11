@@ -111,6 +111,9 @@ class test_average(unittest.TestCase):
 		self.assertAvgEqual(['3.5','2.0','2.45'], '2.6')	# avg = 2.65, sigfigs = 2
 		values = ['-']
 
+	def test_missing_value(self):
+		self.assertAvgEqual([self.individual_averaged.missing_value],
+			self.individual_averaged.missing_value)
 
 
 #

@@ -245,8 +245,8 @@ class Individual_averaged(Individual):
 
 	def add(self, line):
 		'''
-		Append phenotypes to existing list of phenotypes for an individual
-		of a specific strain of a specific sex
+		Append phenotypes to existing list of phenotypes for m/f aggregate
+		individual
 		'''
 		for phenotype_index, phenotype_value in enumerate(line[Individual_averaged.first_phenotype_column_index: ]):
 			# replace non-numeric phenotype value with string indicating missing-value
@@ -318,7 +318,6 @@ class Strains(object):
 			self.strains[strain] = sexes
 			self.ordered_strains.append(strain)
 		self.strains[strain][sex].add(line)	# add line of data to Individual_averaged object
-
 
 	def append_not_averaged_by_strain(self, line):
 		strain = line[Individual.strain_column_index]
