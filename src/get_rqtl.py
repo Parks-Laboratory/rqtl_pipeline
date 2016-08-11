@@ -22,10 +22,12 @@ Notes:
 import pyodbc
 import os
 import sys
-import time
+import time				# for script-duration stats presented to user
 import string
-from decimal import *
-from math import *
+from decimal import *	# for fixed-point representation
+from math import *		# for rounding
+import re				# for determining true count of significant digits
+						# in a numeric string
 
 #######################################################
 ##   Global fields (do not change):
@@ -273,11 +275,9 @@ class Individual_averaged(Individual):
 		decimal_point = '.'
 		for phenotype_value in phenotype_values:
 			# find operand with fewest significant figures
-			num_sigfigs = len(phenotype_value)
-			if decimal_point in phenotype_value:
-				num_sigfigs = num_sigfigs - 1
-			if num_sigfigs < min_significant_figures:
-				min_significant_figures = num_sigfigs
+			sigfig_count = num_sigfigs(phenotype_value)
+			if sigfig_count < min_significant_figures:
+				min_significant_figures = sigfig_count
 
 			# add value to sum
 			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
@@ -330,13 +330,24 @@ class Strains(object):
 		self.strains[strain].append(individual)
 
 
+def num_sigfigs(value):
+	'''
+	Ignores leading zeroes, minus-sign, non-numerics following number
+	then returns count
+	'''
+	# first, get only values >=abs(1) or only values w/ decimal digits
+	# and clear minus-sign, leading zeroes, and any trailing characters like E+3
+	parsed_value = re.sub(r'-*0*((\d+\.?\d*)|(\d*\.\d+)).*', r'\1', value)
+	# then, remove decimal point, if it exists
+	parsed_value = re.sub(r'\.', r'', parsed_value)
+	return( len(parsed_value) )
+
 def is_numeric(string):
 	try:
 		Decimal(string)
 		return(True)
 	except InvalidOperation:
 		return(False)
-
 
 def sanitize(dirty_string):
 	'''Remove undesirable characters from a string'''
