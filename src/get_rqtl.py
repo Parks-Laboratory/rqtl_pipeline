@@ -269,8 +269,8 @@ class Individual_averaged(Individual):
 		setcontext( Context( prec=None, rounding=None ) )
 		# check if no values to average
 		if len(phenotype_values) == 1 and phenotype_values[0] == Individual_averaged.missing_value:
-			return( Individual_averaged.misssing_value )
-			
+			return( Individual_averaged.missing_value )
+
 		sum_phenotype_values = Decimal('0')
 		num_phenotypes = Decimal('0')
 		min_significant_figures = Decimal('+Inf')
