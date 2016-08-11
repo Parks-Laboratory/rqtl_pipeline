@@ -187,22 +187,22 @@ class Pheno_file_builder(File_builder):
 
 
 class Individual(object):
-	iid_column = 0
-	strain_column = 1
-	sex_column = 2
-	first_phenotype_column = 3
+	iid_column_index = 0
+	strain_column_index = 1
+	sex_column_index = 2
+	first_phenotype_column_index = 3
 	row_names = None
 	missing_value = '-'
 	special_rows = [rqtl_sex_label, rqtl_id_label]
 
 	def __init__(self, line):
-		self.iid = sanitize(line[Individual.iid_column])
-		self.strain = line[Individual.strain_column]
-		self.sex = sex_label_as_numeric[line[Individual.sex_column].lower()]
+		self.iid = sanitize(line[Individual.iid_column_index])
+		self.strain = line[Individual.strain_column_index]
+		self.sex = sex_label_as_numeric[line[Individual.sex_column_index].lower()]
 		self.rows = []
 
 	def add(self, line):
-		for phenotype_value in line[Individual.first_phenotype_column: ]:
+		for phenotype_value in line[Individual.first_phenotype_column_index: ]:
 			self.rows.append( Individual.replace_missing_value(phenotype_value) )
 		self.rows.append(self.sex)
 		self.rows.append(self.iid)
@@ -228,7 +228,7 @@ class Individual_averaged(Individual):
 	For one of the sexes, stores phenotype data for all individuals of a strain.
 	'''
 	def __init__(self, line, sex_label):
-		self.strain = line[Individual.strain_column]
+		self.strain = line[Individual.strain_column_index]
 		self.sex = sex_label_as_numeric[sex_label.lower()]
 		# Differentiate male and female labels for each strain
 		iid = [sanitize(self.strain)]
@@ -238,7 +238,7 @@ class Individual_averaged(Individual):
 			iid.append('m')
 		self.iid = '.'.join(iid)
 		# all lines are phenotypes except sex and iid
-		num_phenotype_rows = len(line)-Individual_averaged.first_phenotype_column
+		num_phenotype_rows = len(line)-Individual_averaged.first_phenotype_column_index
 		self.rows = [Individual_averaged.missing_value]*num_phenotype_rows
 		self.rows.append(self.sex)
 		self.rows.append(self.iid)
@@ -248,7 +248,7 @@ class Individual_averaged(Individual):
 		Append phenotypes to existing list of phenotypes for an individual
 		of a specific strain of a specific sex
 		'''
-		for phenotype_index, phenotype_value in enumerate(line[Individual_averaged.first_phenotype_column: ]):
+		for phenotype_index, phenotype_value in enumerate(line[Individual_averaged.first_phenotype_column_index: ]):
 			# replace non-numeric phenotype value with string indicating missing-value
 			phenotype_value = Individual_averaged.replace_missing_value(phenotype_value)
 
@@ -308,8 +308,8 @@ class Strains(object):
 			self.append_not_averaged_by_strain(line)
 
 	def append_averaged_by_strain(self, line):
-		strain = line[Individual_averaged.strain_column]
-		sex = sex_label_as_numeric[ line[Individual_averaged.sex_column].lower() ]
+		strain = line[Individual_averaged.strain_column_index]
+		sex = sex_label_as_numeric[ line[Individual_averaged.sex_column_index].lower() ]
 		if strain not in self.strains:
 			# create list and index into it using numeric indicators of sex
 			sexes = []
@@ -321,7 +321,7 @@ class Strains(object):
 
 
 	def append_not_averaged_by_strain(self, line):
-		strain = line[Individual.strain_column]
+		strain = line[Individual.strain_column_index]
 		if strain not in self.strains:
 			self.strains[strain] = []
 			# set order of strains for use by get_phenotypes() and get_genotypes()
@@ -333,14 +333,14 @@ class Strains(object):
 
 def num_sigfigs(value):
 	'''
-	Ignores leading zeroes, minus-sign, non-numerics following number
-	then returns count
+	Counts number of significant figures in a numeric string.
+	TODO: replace regex w/ conditional logic (regex decreased efficiency by 10%)
 	'''
 	# remove scientific notation characters
 		# -03.05E+4 -> 03.05
 	parsed_value = re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value)
 	# remove leading zeroes to left of decimal point, keeping at most 1 zero
-		# e.g. -03.05E+4 -> 305E+4	or	05 -> 5		or	0.4 -> .4	or	00 -> 0
+		# e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0
 	parsed_value = re.sub(r'^0*(\d.*)$', r'\1', parsed_value)
 	# remove leading zeroes to right of decimal point, plus any immediately to
 	# the left of decimal point, if value < 1
@@ -382,7 +382,6 @@ def sanitize(dirty_string):
 
 	# handle special cases
 	output_string = output_string.replace('%','percent')
-
 
 	# fix mess made by replacement (i.e., duplicated repalcement characters)
 	while duplicated_replacement in output_string:
@@ -530,7 +529,7 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 
 def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 	'''Main function for building phenotype files'''
-	Individual.row_names = (sanitize_list(lines[0][Individual.first_phenotype_column: ] +
+	Individual.row_names = (sanitize_list(lines[0][Individual.first_phenotype_column_index: ] +
 						[rqtl_sex_label] + [rqtl_id_label]) )
 
 	# determines if data will be read in and grouped by strain or kept separated by individual
