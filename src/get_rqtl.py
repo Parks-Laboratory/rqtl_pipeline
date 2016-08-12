@@ -15,9 +15,15 @@ Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <outpu
 		<male pheno_filename_prefix><pheno_filename_suffix>
 		<hetero pheno_sexes_filename_prefix><pheno_filename_suffix>
 
-
 Notes:
 	get_genotypes() is dependent on results from get_phenotypes()
+
+Future ideas:
+	-Create temporary table in databse w/ all the markers, using the marker
+	as primary key. Later, use this table in get_genotypes() query instead of
+	the massive WHERE clause which currently has thousands of conditions per query
+	-May be able to simplifiy script using Pandas Scientific Computing library
+	-Script can be vastly simplified if phenotype data stored in database
 '''
 import pyodbc
 import os
@@ -224,13 +230,13 @@ class Individual(object):
 
 class Individual_averaged(Individual):
 	'''
+	Stores phenotype data for all individuals of same sex of a single strain.
 	Alternative to Individual class for when phenotype values are to be averaged.
-	For one of the sexes, stores phenotype data for all individuals of a strain.
 	'''
 	def __init__(self, line, sex_label):
 		self.strain = line[Individual.strain_column_index]
 		self.sex = sex_label_as_numeric[sex_label.lower()]
-		# Differentiate male and female labels for each strain
+		# Differentiate male and female column labels for each strain
 		iid = [sanitize(self.strain)]
 		if sex_label == female:
 			iid.append('f')
@@ -245,8 +251,7 @@ class Individual_averaged(Individual):
 
 	def add(self, line):
 		'''
-		Append phenotypes to existing list of phenotypes for m/f aggregate
-		individual
+		Append phenotype values to list of phenotypes
 		'''
 		for phenotype_index, phenotype_value in enumerate(line[Individual_averaged.first_phenotype_column_index: ]):
 			# replace non-numeric phenotype value with string indicating missing-value
@@ -301,17 +306,28 @@ class Strains(object):
 		self.ordered_strains = []
 
 	def append(self, line):
-		'''Function through which individuals are created'''
+		'''Function through which individuals(either averaged or not) are created'''
 		if self.average_by_strain:
 			self.append_averaged_by_strain(line)
 		else:
 			self.append_not_averaged_by_strain(line)
 
 	def append_averaged_by_strain(self, line):
+		'''
+		Creates infrastructure to store male and female data separately.
+
+		Each individual's data is added to either the male list or female list
+		for the strain they belong to. Later, in Individual_averaged.average(),
+		all values in male list get averaged and all values in female list get
+		averaged.
+
+		Adds new strain to an ordered list which is used in get_phenotypes()
+		and get_genotypes().
+		'''
 		strain = line[Individual_averaged.strain_column_index]
 		sex = sex_label_as_numeric[ line[Individual_averaged.sex_column_index].lower() ]
 		if strain not in self.strains:
-			# create list and index into it using numeric indicators of sex
+			# create list w/ 2 elements and index into it using numeric indicators of sex
 			sexes = []
 			sexes.append(Individual_averaged(line, female))
 			sexes.append(Individual_averaged(line, male))
@@ -320,6 +336,11 @@ class Strains(object):
 		self.strains[strain][sex].add(line)	# add line of data to Individual_averaged object
 
 	def append_not_averaged_by_strain(self, line):
+		'''
+		Creates an individual with the given line of phenotype data.
+		Adds new strain to an ordered list which is used in get_phenotypes()
+		and get_genotypes().
+		'''
 		strain = line[Individual.strain_column_index]
 		if strain not in self.strains:
 			self.strains[strain] = []
@@ -456,7 +477,7 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 
 	'''
 	Sort markers, not b/c this guarrantees the query will return them in this order
-	but so that the block returned by the query will be contain the correct subset
+	but so that the block returned by the query will contain the correct subset
 	of markers to be written to file
 	'''
 	markers_ordered = sort_markers( markers_raw, connection )
@@ -539,7 +560,7 @@ def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 
 	# open files for writing:
 	phenotype_list_builder = Pheno_file_builder('phenotypes', 'list.txt')
-	phenotype_list_builder.open()
+	phenotype_list_builder.open()	# file w/ just the list of sanitized phenotypes
 	sexes = [female, male, hetero]
 	pheno_file_builders = []
 	for sex in sexes:
@@ -564,7 +585,7 @@ def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 					if pheno_file_builder.row == []:
 						pheno_file_builder.row.append(row_name)
 					'''row_value is a single value for non-averaged inidividual
-					and a list of not-yet-averaged values for an averaged individual'''
+					and a list of not-yet-averaged values for to-be-averaged individual'''
 					row_value = individual.rows[row_index]
 					write_row_value = ( pheno_file_builder.do_sexes_match(individual)
 						or row_name in Individual.special_rows
