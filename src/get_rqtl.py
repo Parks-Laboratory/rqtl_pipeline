@@ -19,6 +19,7 @@ Notes:
 	get_genotypes() is dependent on results from get_phenotypes()
 
 Future ideas:
+	-Use argparse library to parse command-line arguments
 	-Create temporary table in databse w/ all the markers, using the marker
 	as primary key. Later, use this table in get_genotypes() query instead of
 	the massive WHERE clause which currently has thousands of conditions per query
@@ -34,11 +35,12 @@ from decimal import *	# for fixed-point representation
 from math import *		# for rounding
 import re				# for determining true count of significant digits
 						# in a numeric string
+from enum import Enum
 
 #######################################################
 ##   Global fields (do not change):
 #######################################################
-make_chromosome_files = False	# No testing done on building geno chromosome files!
+make_chromosome_files = False	# Has bug where headings written but no genotyeps
 chromosomes = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','x']
 
 output_dir = None
@@ -52,6 +54,21 @@ female = 'female'
 male = 'male'
 hetero = 'hetero'
 sex_label_as_numeric = {female:0,male:1}		# maps sex labels to numeric indicator
+
+class round(Enum):
+	'''Adjusted by user in "Parameters set up user" section,
+	used by Individual_averaged.average()'''
+	min = 'round_min'
+	max = 'round_max'
+	fixed = 'round_fixed'
+
+	def __init__(self, description):
+		self.description = description
+		self.max_decimal_digits = None
+
+	def set_max_decimal_digits(self, max_decimal_digits):
+		'''Used only for fixed-decimal-digit rounding'''
+		self.max_decimal_digits = Decimal(str(pow(10,-max_decimal_digits)))
 
 #######################################################
 ##   Parameters set by user (change as desired/needed):
@@ -73,6 +90,30 @@ pheno_filename_prefixes = {female:'female',male:'male',hetero:'hetero'}	# change
 pheno_filename_suffix = 'csvsr_pheno.csv'
 main_geno_filename_prefix = 'main'
 geno_filename_suffix = 'csvsr_geno.csv'
+
+'''Specification for number of digits to keep after rounding an average of phenotype values)
+	Options for rounding_method:
+		round.fixed: use set_max_decimal_digits() to specify number decimal places
+						to keep after rounding
+						e.g. (1.000, 1.00, 1)/3 and set_max_decimal_digits(1)
+							rounds to 1.0 (1 decimal digit, non-deterministic # sigfigs)
+						e.g. (1.000, 1.00, 1)/3 and set_max_decimal_digits(4)
+							rounds to 1.0000 (4 decimal digits, non-deterministic # sigfigs)
+		round.max: script looks at list of values to be averaged and keeps
+						as many sigfigs as the value with most number sigfigs
+						e.g. (1.00, 1.0, 1)/3 rounds to 1.00
+						(3 sigfigs, non-deterministic # decimal digits)
+		round.min: script looks at list of values to be averaged and keeps
+						as many sigfigs as the value with the fewest sigfigs
+						(best method for rounding if list of values to be
+						averaged are all specified in scientific notation w/
+						appropriate precision)
+						e.g. (1.00, 1.0, 1)/3 rounds to 1
+						(1 sigfig, non-deterministic # decimal digits)
+		None: no rounding done, max digits kept (Default: 28 digits)'''
+rounding_method = round.fixed
+# relevant only if round.fixed specified
+round.fixed.set_max_decimal_digits(2)
 
 #######################################################
 ##   Main program:
@@ -228,11 +269,14 @@ class Individual(object):
 			value = Individual.missing_value
 		return(value)
 
+
 class Individual_averaged(Individual):
 	'''
 	Stores phenotype data for all individuals of same sex of a single strain.
 	Alternative to Individual class for when phenotype values are to be averaged.
 	'''
+	rounding_method_for_averaging = rounding_method
+
 	def __init__(self, line, sex_label):
 		self.strain = line[Individual.strain_column_index]
 		self.sex = sex_label_as_numeric[sex_label.lower()]
@@ -270,30 +314,47 @@ class Individual_averaged(Individual):
 		Returns average of a list of phenotype values. The parameter is used to
 		simplify the process of specifying which
 		'''
+		rounding_method = Individual_averaged.rounding_method_for_averaging
 		# context set globally for all Decimal arithmetic, not just for this instance of method
 		setcontext( Context( prec=None, rounding=None ) )
 		# check if no values to average
 		if len(phenotype_values) == 1 and phenotype_values[0] == Individual_averaged.missing_value:
 			return( Individual_averaged.missing_value )
 
+		# used in calculation of average and when rounding_method is round.max
 		sum_phenotype_values = Decimal('0')
+		# used in calculation of average
 		num_phenotypes = Decimal('0')
+		# used when rounding_method is round.min
 		min_significant_figures = Decimal('+Inf')
+		# calculate sum
 		for phenotype_value in phenotype_values:
 			# find operand with fewest significant figures
-			sigfig_count = num_sigfigs(phenotype_value)
-			if sigfig_count < min_significant_figures:
-				min_significant_figures = sigfig_count
+			if round.min is rounding_method:
+				sigfig_count = num_sigfigs(phenotype_value)
+				if sigfig_count < min_significant_figures:
+					min_significant_figures = sigfig_count
 
 			# add value to sum
 			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
 			num_phenotypes = num_phenotypes + 1
-		# context set globally for all Decimal arithmetic, not just for this instance of method
-		setcontext( Context( prec=min_significant_figures, rounding=ROUND_HALF_EVEN) )
-		# calculate average, round based on min_significant_figures
+
+		# used by all rounding_method types
 		average = sum_phenotype_values / num_phenotypes
-		# find out if answer has a decimal poin
-		return( str(average) )
+		if round.min is rounding_method:	# i.e. proper sigfig rounding, assuming inputs are in scientific notation
+			context = Context( prec=min_significant_figures,
+						rounding=ROUND_HALF_EVEN)
+			average_rounded = context.create_decimal(average)
+		elif round.max is rounding_method:	# keep only as many digits as the input w/ most digits
+			context = Context( prec=num_sigfigs(sum_phenotype_values),
+						rounding=ROUND_HALF_EVEN)
+			average_rounded = context.create_decimal(average)
+		elif round.fixed is rounding_method:
+			average_rounded = average.quantize(round.fixed.max_decimal_digits,
+						rounding=ROUND_HALF_EVEN)
+		else:
+			'''No rounding done, ungodly number of decimal places kept'''
+		return( str(average_rounded) )
 
 
 class Strains(object):

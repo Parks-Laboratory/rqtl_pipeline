@@ -56,6 +56,7 @@ class test_average(unittest.TestCase):
 	def setUp(self):
 		self.line = ['iid','strain','male']
 		self.individual_averaged = Individual_averaged(self.line, 'female')
+		Individual_averaged.rounding_method_for_averaging = round.min
 
 	def assertAvgEqual(self, values_to_average, true_avg):
 		self.assertEqual(self.individual_averaged.average(values_to_average), true_avg)
@@ -87,6 +88,7 @@ class test_average(unittest.TestCase):
 		self.assertAvgEqual(['2.55','1.000'], '1.78')	# avg = 1.775, sigfigs = 3
 		self.assertAvgEqual(['2.550','1.000'], '1.775')	# avg = 1.775, sigfigs = 3
 		self.assertAvgEqual(['2.55','2.55'], '2.55')	# avg = 1.775, sigfigs = 2
+		self.assertAvgEqual(['49.7','50.2','50'], '5E+1')		# avg = 49.9667, sigfigs = 1
 
 	def test_sigfigs_of_negative_values(self):
 		self.assertAvgEqual(['-2.55','-1'], '-2')		# avg = 1.775, sigfigs = 1
