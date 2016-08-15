@@ -52,11 +52,11 @@ class test_num_sigfigs(unittest.TestCase):
 		self.assertEqual(num_sigfigs('05.34E-7'), 3)
 		self.assertEqual(num_sigfigs('-05.34E-7'), 3)
 
-class test_average(unittest.TestCase):
+class test_average_round_min(unittest.TestCase):
 	def setUp(self):
+		Individual_averaged.rounding_method_for_averaging = round.min
 		self.line = ['iid','strain','male']
 		self.individual_averaged = Individual_averaged(self.line, 'female')
-		Individual_averaged.rounding_method_for_averaging = round.min
 
 	def assertAvgEqual(self, values_to_average, true_avg):
 		self.assertEqual(self.individual_averaged.average(values_to_average), true_avg)
@@ -111,6 +111,69 @@ class test_average(unittest.TestCase):
 		# but does merely truncates everything after that digit if it's even
 		self.assertAvgEqual(['3.5','2.0','2.15'], '2.6')	# avg = 2.55, sigfigs = 2
 		self.assertAvgEqual(['3.5','2.0','2.45'], '2.6')	# avg = 2.65, sigfigs = 2
+		values = ['-']
+
+	def test_missing_value(self):
+		self.assertAvgEqual([self.individual_averaged.missing_value],
+			self.individual_averaged.missing_value)
+
+
+
+class test_average_round_max(unittest.TestCase):
+	def setUp(self):
+		Individual_averaged.rounding_method_for_averaging = round.max
+		self.line = ['iid','strain','male']
+		self.individual_averaged = Individual_averaged(self.line, 'female')
+
+	def assertAvgEqual(self, values_to_average, true_avg):
+		self.assertEqual(self.individual_averaged.average(values_to_average), true_avg)
+
+	def assertAvgNotEqual(self, values_to_average, true_avg):
+		self.assertNotEqual(self.individual_averaged.average(values_to_average), true_avg)
+
+	def test_single_value(self):
+		self.assertAvgEqual(['23.3'], '23.3')		# average = 24.3, sigfigs = 1
+		self.assertAvgEqual(['.3'], '0.3')		# average = 24.3, sigfigs = 1
+		self.assertAvgEqual(['-.3'], '-0.3')		# average = 24.3, sigfigs = 1
+		self.assertAvgEqual(['-0.3'], '-0.3')		# average = 24.3, sigfigs = 1
+
+	def test_scientific_notation(self):
+		self.assertAvgEqual(['23.3','3','46.6'], '24.3')		# average = 24.3, sigfigs = 1
+		self.assertAvgEqual(['-23.3','-3','-46.6'], '-24.3')	# average = 24.3, sigfigs = 1
+		self.assertAvgEqual(['.000233','.00003','.000466'], '0.000243')	# average = 0.000243, sigfigs = 1
+		self.assertAvgEqual(['-.000233','-.000030','-.000466'], '-0.000243')	# average = 0.000243, sigfigs = 2
+
+	def test_decimal_values(self):
+		self.assertAvgEqual(['.233','.03','.466'], '0.243')	# average = 0.243, sigfigs = 1
+		self.assertAvgEqual(['-.233','-.03','-.466'], '-0.243')	# average = -0.243, sigfigs = 1
+		self.assertAvgEqual(['.0233','.003','.0466'], '0.0243')	# average = 0.0243, sigfigs = 5
+
+	def test_sigfigs_of_positive_values(self):
+		self.assertAvgEqual(['2.55','1'], '1.78')		# avg = 1.775, sigfigs = 1
+		self.assertAvgEqual(['2.55','1.0'], '1.78')	# avg = 1.775, sigfigs = 2
+		self.assertAvgEqual(['2.55','1.00'], '1.78')	# avg = 1.775, sigfigs = 3
+		self.assertAvgEqual(['2.55','1.000'], '1.775')	# avg = 1.775, sigfigs = 3
+		self.assertAvgEqual(['2.550','1.000'], '1.775')	# avg = 1.775, sigfigs = 3
+		self.assertAvgEqual(['2.55','2.55'], '2.55')	# avg = 1.775, sigfigs = 2
+		self.assertAvgEqual(['49.7','50.2','50'], '50.0')		# avg = 49.9667, sigfigs = 1
+
+	def test_sigfigs_of_negative_values(self):
+		self.assertAvgEqual(['-2.55','-1'], '-1.78')		# avg = 1.775, sigfigs = 1
+		self.assertAvgEqual(['-2.55','-1.0'], '-1.78')	# avg = 1.775, sigfigs = 2
+		self.assertAvgEqual(['-2.55','-1.00'], '-1.78')	# avg = 1.775, sigfigs = 3
+		self.assertAvgEqual(['-2.55','-1.000'], '-1.775')	# avg = 1.775, sigfigs = 3
+		self.assertAvgEqual(['-2.550','-1.000'], '-1.775')	# avg = 1.775, sigfigs = 3
+		self.assertAvgEqual(['-2.55','-2.55'], '-2.55')	# avg = 1.775, sigfigs = 2
+
+	def test_leading_and_trailing_zeroes(self):
+		self.assertAvgEqual(['02.55','1'], '1.78')		# avg = 1.775, sigfigs = 1
+		self.assertAvgEqual(['2.5500','1.0'], '1.7750')	# avg = 1.775, sigfigs = 2
+		self.assertAvgEqual(['02.55','01.00'], '1.78')	# avg = 1.775, sigfigs = 3
+		self.assertAvgEqual(['2.5500','1.00'], '1.7750')	# avg = 1.775, sigfigs = 3
+		self.assertAvgEqual(['2.550','1.00000'], '1.77500')	# avg = 1.775, sigfigs = 4
+		self.assertAvgEqual(['2.5500','02.55'], '2.5500')	# avg = 1.775, sigfigs = 3
+
+	def test_round_even_with_5(self):
 		values = ['-']
 
 	def test_missing_value(self):
