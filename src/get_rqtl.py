@@ -36,7 +36,7 @@ from math import *		# for rounding
 import re				# for determining true count of significant digits
 						# in a numeric string
 from enum import Enum
-
+from precise_value import *
 #######################################################
 ##   Global fields (do not change):
 #######################################################
@@ -58,7 +58,7 @@ sex_label_as_numeric = {female:0,male:1}		# maps sex labels to numeric indicator
 class round(Enum):
 	'''Adjusted by user in "Parameters set up user" section,
 	used by Individual_averaged.average()'''
-	min = 'round_min'
+	proper = 'round.proper'
 	max = 'round_max'
 	fixed = 'round_fixed'
 
@@ -103,7 +103,7 @@ geno_filename_suffix = 'csvsr_geno.csv'
 						as many sigfigs as the value with most number sigfigs
 						e.g. (1.00, 1.0, 1)/3 rounds to 1.00
 						(3 sigfigs, non-deterministic # decimal digits)
-		round.min: script looks at list of values to be averaged and keeps
+		round.proper: script looks at list of values to be averaged and keeps
 						as many sigfigs as the value with the fewest sigfigs
 						(best method for rounding if list of values to be
 						averaged are all specified in scientific notation w/
@@ -325,15 +325,15 @@ class Individual_averaged(Individual):
 		sum_phenotype_values = Decimal('0')
 		# used in calculation of average
 		num_phenotypes = Decimal('0')
-		# used when rounding_method is round.min
-		min_significant_figures = Decimal('+Inf')
+		# used when rounding_method is round.proper
+		min_decimal_digits = Decimal('+Inf')
 		# calculate sum
 		for phenotype_value in phenotype_values:
-			# find number significant figures of operand with fewest sigfigs
-			if round.min is rounding_method:
-				sigfig_count = num_sigfigs(phenotype_value)
-				if sigfig_count < min_significant_figures:
-					min_significant_figures = sigfig_count
+			# find minimum number of decimal digits of any of the values
+			if round.proper is rounding_method:
+				decimal_digit_count = num_decimal_digits(phenotype_value)
+				if decimal_digit_count < min_decimal_digits:
+					min_decimal_digits = decimal_digit_count
 
 			# add value to sum
 			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
@@ -341,8 +341,8 @@ class Individual_averaged(Individual):
 
 		# used by all rounding_method types
 		average = sum_phenotype_values / num_phenotypes
-		if round.min is rounding_method:	# i.e. proper sigfig rounding, assuming inputs are in scientific notation
-			context = Context( prec=min_significant_figures,
+		if round.proper is rounding_method:	# i.e. proper sigfig rounding, assuming inputs are in scientific notation
+			context = Context( prec=num_sigfigs(str(sum_phenotype_values)),
 						rounding=ROUND_HALF_EVEN)
 			average_rounded = context.create_decimal(average)
 		elif round.max is rounding_method:	# keep only as many digits as the sum
@@ -412,48 +412,12 @@ class Strains(object):
 		individual.add(line)	# add line of data to Individual object
 		self.strains[strain].append(individual)
 
-def num_decimals(value):
-	'''Counts number of significant digits to right of decimal point'''
-	parsed_value = remove_non_digits(value)
-	parsed_value = remove_non_significant_zeroes(parsed_value)
-	parsed_value = parsed_value.split('.')[1]
-	return( len(parsed_value) )
-
-def num_sigfigs(value):
-	'''
-	Counts number of significant figures in a numeric string.
-	TODO: replace regex w/ conditional logic (regex decreased efficiency by 10%)
-	'''
-	parsed_value = remove_non_digits(value)
-	parsed_value = remove_non_significant_zeroes(parsed_value)
-	# remove decimal point
-	parsed_value = re.sub(r'\.', r'', parsed_value)
-	return( len(parsed_value) )
-
 def is_numeric(string):
 	try:
 		Decimal(string)
 		return(True)
 	except InvalidOperation:
 		return(False)
-
-def remove_non_digits(value):
-	'''Remove scientific notation characters and negation sign
-		-03.05E+4 -> 03.05'''
-	return( re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value) )
-
-def remove_non_significant_zeroes(value):
-	# remove leading zeroes to left of decimal point, keeping at most 1 zero
-	# e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0
-	parsed_value = re.sub(r'^0*(\d.*)$', r'\1', value)
-	# remove leading zeroes to right of decimal point, plus any immediately to
-	# the left of decimal point, if value < 1
-	# e.g. .05E+4 -> 5E+4    or   0.01 -> .1
-	parsed_value = re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', parsed_value)
-	# remove trailing zeroes to right of integer w/ no decimal point
-	# e.g. 100 -> 1   but   100. -> 100.
-	parsed_value = re.sub(r'^([1-9]+)0*$', r'\1', parsed_value)
-	return( parsed_value )
 
 def sanitize(dirty_string):
 	'''Remove undesirable characters from a string'''
@@ -513,19 +477,16 @@ def sort_markers( markers_raw, connection ):
 			markers_raw.pop(marker)		# ensure that each marker_identifier is unique/included only once
 	return(markers_ordered)
 
-
-def sql_format(list):
-	'''Format a list for use in an sql query's where-clause'''
-	return( '[' + '],['.join(list) + ']')
-
-
 def rqtl_format(list):
 	'''Sanitize strain names'''
 	new_list = []
 	for item in list:
 		new_list.append(item.replace('/','.'))
-	return(new_list)
+		return(new_list)
 
+def sql_format(list):
+	'''Format a list for use in an sql query's where-clause'''
+	return( '[' + '],['.join(list) + ']')
 
 def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 	'''Main function for building genotype file(s)'''
@@ -620,7 +581,6 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 		geno_file_builder.file.close()
 
 	connection.close()
-
 
 def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 	'''Main function for building phenotype files'''
