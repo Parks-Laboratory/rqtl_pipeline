@@ -413,6 +413,7 @@ class Strains(object):
 		self.strains[strain].append(individual)
 
 def num_decimals(value):
+	'''Counts number of significant digits to right of decimal point'''
 
 def num_sigfigs(value):
 	'''
