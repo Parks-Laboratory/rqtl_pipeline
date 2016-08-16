@@ -1,12 +1,15 @@
 from enum import Enum
 import sys
 
-class precise_value(object):
+class Precise_value(object):
     def __init__(self, value):
         self.rounding_method = rounding_methods.proper
         self.string_value = value
         self.decimal_value = Decimal(value)
+        self.num_sigfigs = num_sigfigs(string_value)
+        self.num_decimal_digits = num_decimal_digits(string_value)
 
+    def __add__(self, other):
 
 
     def set_rounding_method(self, rounding_method):
@@ -37,14 +40,18 @@ class precise_value(object):
     		-03.05E+4 -> 03.05'''
     	return( re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value) )
 
-    def remove_non_significant_zeroes(value):
+    def remove_non_significant_leading_zeroes(value):
     	'''remove leading zeroes to left of decimal point, keeping at most 1 zero
     	e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0'''
-    	parsed_value = re.sub(r'^0*(\d.*)$', r'\1', value)
+    	return( re.sub(r'^0*(\d.*)$', r'\1', value) )
+
+    def remove_non_significant_decimal_placeholding_zeroes(value):
     	'''remove leading zeroes to right of decimal point, plus any immediately to
     	the left of decimal point, if value < 1
-    	e.g. .05E+4 -> 5E+4    or   0.01 -> .1'''
+    	e.g. .05 -> 5    or   0.01 -> .1'''
     	parsed_value = re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', parsed_value)
+
+    def remove_non_significant_integral_placeholding_zeroes(value):
     	'''remove trailing zeroes to right of integer w/ no decimal point
     	e.g. 100 -> 1   but   100. -> 100.'''
     	parsed_value = re.sub(r'^([1-9]+)0*$', r'\1', parsed_value)
