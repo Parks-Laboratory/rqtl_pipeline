@@ -329,7 +329,7 @@ class Individual_averaged(Individual):
 		min_significant_figures = Decimal('+Inf')
 		# calculate sum
 		for phenotype_value in phenotype_values:
-			# find operand with fewest significant figures
+			# find number significant figures of operand with fewest sigfigs
 			if round.min is rounding_method:
 				sigfig_count = num_sigfigs(phenotype_value)
 				if sigfig_count < min_significant_figures:
