@@ -322,11 +322,11 @@ class Individual_averaged(Individual):
 			return( Individual_averaged.missing_value )
 
 		# used in calculation of average and when rounding_method is round.max
-		sum_phenotype_values = Decimal('0')
+		sum_phenotype_values = Precise_value('0')
 		# used in calculation of average
-		num_phenotypes = Decimal('0')
+		num_phenotypes = Precise_value('0')
 		# used when rounding_method is round.proper
-		min_decimal_digits = Decimal('+Inf')
+		min_decimal_digits = Precise_value('+Inf')
 		# calculate sum
 		for phenotype_value in phenotype_values:
 			# find minimum number of decimal digits of any of the values
