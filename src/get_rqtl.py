@@ -327,6 +327,8 @@ class Individual_averaged(Individual):
 		num_phenotypes = Decimal('0')
 		# used when rounding_method is round.min
 		min_significant_figures = Decimal('+Inf')
+		# used when rounding_method is round.max
+		max_significant_figures = Decimal('+Inf')
 		# calculate sum
 		for phenotype_value in phenotype_values:
 			# find operand with fewest significant figures
@@ -334,6 +336,11 @@ class Individual_averaged(Individual):
 				sigfig_count = num_sigfigs(phenotype_value)
 				if sigfig_count < min_significant_figures:
 					min_significant_figures = sigfig_count
+			# find operand with most significant figures
+			elif round.max is rounding_method:
+				sigfig_count = num_sigfigs(phenotype_value)
+				if sigfig_count> max_significant_figures:
+					max_significant_figures = sigfig_count
 
 			# add value to sum
 			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
