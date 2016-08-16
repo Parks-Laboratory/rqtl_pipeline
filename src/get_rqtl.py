@@ -412,15 +412,14 @@ class Strains(object):
 		individual.add(line)	# add line of data to Individual object
 		self.strains[strain].append(individual)
 
+def num_decimals(value):
 
 def num_sigfigs(value):
 	'''
 	Counts number of significant figures in a numeric string.
 	TODO: replace regex w/ conditional logic (regex decreased efficiency by 10%)
 	'''
-	# remove scientific notation characters
-		# -03.05E+4 -> 03.05
-	parsed_value = re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value)
+	parsed_value = remove_non_digits()
 	# remove leading zeroes to left of decimal point, keeping at most 1 zero
 		# e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0
 	parsed_value = re.sub(r'^0*(\d.*)$', r'\1', parsed_value)
@@ -441,6 +440,11 @@ def is_numeric(string):
 		return(True)
 	except InvalidOperation:
 		return(False)
+
+def remove_non_digits(value):
+	'''Remove scientific notation characters and negation sign
+		-03.05E+4 -> 03.05'''
+	return( re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value) )
 
 def sanitize(dirty_string):
 	'''Remove undesirable characters from a string'''
