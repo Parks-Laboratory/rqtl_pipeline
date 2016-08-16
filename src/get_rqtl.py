@@ -345,7 +345,7 @@ class Individual_averaged(Individual):
 			context = Context( prec=min_significant_figures,
 						rounding=ROUND_HALF_EVEN)
 			average_rounded = context.create_decimal(average)
-		elif round.max is rounding_method:	# keep only as many digits as the input w/ most digits
+		elif round.max is rounding_method:	# keep only as many digits as the sum
 			# python addition naturally keeps all decimal places
 			context = Context( prec=num_sigfigs(str(sum_phenotype_values)),
 						rounding=ROUND_HALF_EVEN)

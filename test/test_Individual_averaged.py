@@ -80,8 +80,6 @@ class test_average_round_min(unittest.TestCase):
 		self.assertAvgEqual(['.233','.03','.466'], '0.2')	# sum= , sf=1, avg=24.3
 		self.assertAvgEqual(['-.233','-.03','-.466'], '-0.2')	# sum= , sf=1, avg=24.3
 		self.assertAvgEqual(['.0233','.003','.0466'], '0.02')	# sum= , sf=5, avg=24.3
-		self.assertAvgEqual(['.55','.95','.85'], '0.78') # sum=2.35, sf=2, avg=0.78333...
-		self.assertAvgEqual(['.05','-.95','.85'], '-0.02') # sum=0.05, sf=1, avg=-0.01666...
 
 	def test_sigfigs_of_positive_values(self):
 		self.assertAvgEqual(['2.55','1'], '2')		# sum= , sf=1, avg=1.775
@@ -90,7 +88,6 @@ class test_average_round_min(unittest.TestCase):
 		self.assertAvgEqual(['2.55','1.000'], '1.78')	# sum= , sf=3, avg=1.775
 		self.assertAvgEqual(['2.550','1.000'], '1.775')	# sum= , sf=3, avg=1.775
 		self.assertAvgEqual(['2.55','2.55'], '2.55')	# sum= , sf=2, avg=1.775
-		self.assertAvgEqual(['49.7','50.2','50'], '5E+1')	# sum= , sf=1, avg=49.9666...
 
 	def test_sigfigs_of_negative_values(self):
 		self.assertAvgEqual(['-2.55','-1'], '-2')		# sum= , sf=1, avg=1.775
@@ -113,7 +110,12 @@ class test_average_round_min(unittest.TestCase):
 		# but does merely truncates everything after that digit if it's even
 		self.assertAvgEqual(['3.5','2.0','2.15'], '2.6')	# sum= , sf=2, avg=2.55
 		self.assertAvgEqual(['3.5','2.0','2.45'], '2.6')	# sum= , sf=2, avg=2.65
-		values=['-']
+
+	def test_special_cases(self):
+		self.assertAvgEqual(['.55','.95','.85'], '0.78') # sum=2.35, sf=2, avg=0.78333...
+		self.assertAvgEqual(['.05','-.95','.85'], '-0.02') # sum=0.05, sf=1, avg=-0.01666...
+		self.assertAvgEqual(['49.7','50.2','50'], '5E+1')	# sum= , sf=1, avg=49.9666...
+		self.assertAvgEqual(['6.55','3.55'], '5.05')	# sum=10.10, sf=3, avg=5.05
 
 	def test_missing_value(self):
 		self.assertAvgEqual([self.individual_averaged.missing_value],
@@ -149,8 +151,6 @@ class test_average_round_max(unittest.TestCase):
 		self.assertAvgEqual(['.233','.03','.466'], '0.243')	# sum= , sf=1, avg=0.243
 		self.assertAvgEqual(['-.233','-.03','-.466'], '-0.243')	# sum= , sf=1, avg=-0.243
 		self.assertAvgEqual(['.0233','.003','.0466'], '0.0243')	# sum= , sf=5, avg=0.0243
-		self.assertAvgEqual(['.55','.95','.85'], '0.783') # sum=2.35, sf=2, avg=0.78333...
-		self.assertAvgEqual(['.05','-.95','.85'], '-0.02') # sum=0.05, sf=1, avg=-0.01666...
 
 	def test_sigfigs_of_positive_values(self):
 		self.assertAvgEqual(['2.55','1'], '1.78')		# sum= , sf=1, avg=1.775
@@ -159,7 +159,6 @@ class test_average_round_max(unittest.TestCase):
 		self.assertAvgEqual(['2.55','1.000'], '1.775')	# sum= , sf=3, avg=1.775
 		self.assertAvgEqual(['2.550','1.000'], '1.775')	# sum= , sf=3, avg=1.775
 		self.assertAvgEqual(['2.55','2.55'], '2.55')	# sum= , sf=2, avg=1.775
-		self.assertAvgEqual(['49.7','50.2','50'], '49.97') # sum=149.9, sf=4, avg=49.966...
 
 	def test_sigfigs_of_negative_values(self):
 		self.assertAvgEqual(['-2.55','-1'], '-1.78')		# sum= , sf=1, avg=1.775
@@ -170,15 +169,24 @@ class test_average_round_max(unittest.TestCase):
 		self.assertAvgEqual(['-2.55','-2.55'], '-2.55')	# sum= , sf=2, avg=1.775
 
 	def test_leading_and_trailing_zeroes(self):
-		self.assertAvgEqual(['02.55','1'], '1.78')		# sum= , sf=1, avg=1.775
-		self.assertAvgEqual(['2.5500','1.0'], '1.7750')	# sum= , sf=2, avg=1.775
-		self.assertAvgEqual(['02.55','01.00'], '1.78')	# sum= , sf=3, avg=1.775
-		self.assertAvgEqual(['2.5500','1.00'], '1.7750')	# sum= , sf=3, avg=1.775
-		self.assertAvgEqual(['2.550','1.00000'], '1.77500')	# sum= , sf=4, avg=1.775
-		self.assertAvgEqual(['2.5500','02.55'], '2.5500')	# sum= , sf=3, avg=1.775
+		self.assertAvgEqual(['02.55','1'], '1.78')		# sum=3.55 , sf=1, avg=1.775
+		self.assertAvgEqual(['2.5500','1.0'], '1.7750')	# sum=3.5500 , sf=2, avg=1.775
+		self.assertAvgEqual(['02.55','01.00'], '1.78')	# sum=3.55 , sf=3, avg=1.775
+		self.assertAvgEqual(['2.5500','1.00'], '1.7750')	# sum=3.5500 , sf=3, avg=1.775
+		self.assertAvgEqual(['2.550','1.00000'], '1.77500')	# sum=3.55000 , sf=4, avg=1.775
+		self.assertAvgEqual(['2.5500','02.55'], '2.5500')	# sum=3.1000 , sf=3, avg=1.775
 
 	def test_round_even_with_5(self):
-		values=['-']
+		# check that a 5 rounds last significant digit up if that digit is odd,
+		# but does merely truncates everything after that digit if it's even
+		self.assertAvgEqual(['2.6','3.5','0.35'], '2.15')	# sum=7.65 , sf=2, avg=2.15
+		self.assertAvgEqual(['2.6','3.5','0.65'], '2.25')	# sum=6.75 , sf=2, avg=2.25
+
+	def test_special_cases(self):
+		self.assertAvgEqual(['.55','.95','.85'], '0.783') # sum=2.35, sf=2, avg=0.78333...
+		self.assertAvgEqual(['.05','-.95','.85'], '-0.02') # sum=0.05, sf=1, avg=-0.01666...
+		self.assertAvgEqual(['49.7','50.2','50'], '49.97') # sum=149.9, sf=4, avg=49.966...
+		self.assertAvgEqual(['6.55','3.55'], '5.050')	# sum=10.10, sf=3, avg=5.05
 
 	def test_missing_value(self):
 		self.assertAvgEqual([self.individual_averaged.missing_value],
