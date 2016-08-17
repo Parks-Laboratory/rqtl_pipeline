@@ -1,3 +1,4 @@
+from abc import ABCMeta, abstractmethod
 from decimal import Decimal
 from enum import Enum
 import re
@@ -53,10 +54,8 @@ class Precise_value(object):
         self.num_significant_decimal_digits = self.rounding_handler.num_significant_decimal_digits(self.string_value)
 
 
-class Rounding_handler(object):
+class Rounding_handler(metaclass=ABCMeta):
     '''Base class for rounding handlers. Does NO rounding.'''
-    def __init__(self, value):
-
     def add(precise_value_1, precise_value_2):
         return( precise_value_1 + precise_value_2 )
 
@@ -73,22 +72,26 @@ class Rounding_handler(object):
         return( value.quantize(Decimal(str(pow(10,-num_digits_to_keep))),
                      rounding=ROUND_HALF_EVEN) )
 
+    @abstractmethod
     def num_significant_decimal_digits(value):
-        '''(Abstract method) Counts number of significant digits to right of decimal point'''
+        '''Counts number of significant digits to right of decimal point'''
         return(None)
 
+    @abstractmethod
     def num_significant_digits(value):
-        '''(Abstract method) Counts number of significant figures in a numeric string.'''
+        '''Counts number of significant figures in a numeric string.'''
         return(None)
 
+    @abstractmethod
     def get_significant_digits(value):
         return(None)
 
+    @abstractmethod
     def get_significant_decimal_digits(value):
         return(None)
 
     def remove_decimal_point(value):
-        return( re.sub(r'\.', r'', parsed_value) )
+        return( re.sub(r'\.', r'', value) )
 
     def remove_non_digits(value):
         '''Remove scientific notation characters and negation sign
@@ -104,12 +107,12 @@ class Rounding_handler(object):
         '''Remove leading zeroes to right of decimal point, plus any immediately to
         the left of decimal point, if value < 1
         e.g. .05 -> .5    or   0.01 -> .1'''
-        return( re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', parsed_value) )
+        return( re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', value) )
 
     def remove_integral_placeholding_zeroes(value):
         '''Remove trailing zeroes to right of integer w/ no decimal point
         e.g. 100 -> 1   but   100. -> 100.'''
-        return( parsed_value = re.sub(r'^([1-9]+)0*$', r'\1', parsed_value) )
+        return( re.sub(r'^([1-9]+)0*$', r'\1', value) )
 
 
 class Rounding_handler_keep_integral_zeroes(Rounding_handler):
