@@ -6,18 +6,18 @@ import sys
 
 class Precise_value(object):
     def __init__(self, rounding_method, string_value):
-        self.set_rounding_handler(rounding_method, string_value)
-        self.update_significant_digit_counts()
         self.string_value = string_value
         self.decimal_value = Decimal(self.string_value)
+        self.set_rounding_handler(rounding_method, string_value)
+        self.update_significant_digit_counts()
 
     def set_rounding_handler(self, rounding_method, string_value):
         if rounding_method == 'no_rounding':
-            self.rounding_handler = Rounding_handler(string_value)
+            self.rounding_handler = Rounding_handler
         elif rounding_method == 'keep_integral_zeroes':
-            self.rounding_handler = Rounding_handler_keep_integral_zeroes(string_value)
+            self.rounding_handler = Rounding_handler_keep_integral_zeroes
         elif rounding_method == 'proper':
-            self.rounding_handler = Rounding_handler_proper(string_value)
+            self.rounding_handler = Rounding_handler_proper
         else:
             sys.exit('Error: rounding_method "' + rounding_method + '" does not exist.')
 
@@ -28,23 +28,22 @@ class Precise_value(object):
     def __sub__(self, other):
         if self.can_do_arithmetic(other):
             return( self.rounding_handler.sub(self, other) )
-            # TODO impelemnt
 
     def __mul__(self, other):
         if self.can_do_arithmetic(other):
             return( self.rounding_handler.mul(self, other) )
-            # TODO impelemnt
 
     def __div__(self, other):
         if self.can_do_arithmetic(other):
             return( self.rounding_handler.div(self, other) )
-            # TODO impelemnt
 
     def can_do_arithmetic(self, other):
+        '''TODO raise exception or quit if math can't be done'''
         return( is_precise_precise_value_object(other) and self.are_rounding_handlers_same(other) )
 
-    def is_precise_precise_value_object(value):
-        return(isinstance(value, Precise_value))
+    @classmethod
+    def is_precise_precise_value_object(cls, value):
+        return(isinstance(value, cls))
 
     def are_rounding_handlers_same(self, other):
         return(self.rounding_handler.__class__ is other.rounding_handler.__class__)
@@ -115,7 +114,7 @@ class Rounding_handler(metaclass=ABCMeta):
         return( re.sub(r'^([1-9]+)0*$', r'\1', value) )
 
 
-class Rounding_handler_keep_integral_zeroes(Rounding_handler):
+class Rounding_handler_keep_integral_zeroes(Rounding_handler, metaclass=ABCMeta):
     def num_significant_digits(value):
         '''Counts number of significant figures in a numeric string.'''
         parsed_value = Rounding_handler_keep_integral_zeroes.get_significant_digits(value)
