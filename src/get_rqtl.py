@@ -19,6 +19,7 @@ Notes:
 	get_genotypes() is dependent on results from get_phenotypes()
 
 Future ideas:
+	-Use argparse library to parse command-line arguments
 	-Create temporary table in databse w/ all the markers, using the marker
 	as primary key. Later, use this table in get_genotypes() query instead of
 	the massive WHERE clause which currently has thousands of conditions per query
@@ -34,11 +35,12 @@ from decimal import *	# for fixed-point representation
 from math import *		# for rounding
 import re				# for determining true count of significant digits
 						# in a numeric string
-
+from enum import Enum
+import precise_value
 #######################################################
 ##   Global fields (do not change):
 #######################################################
-make_chromosome_files = False	# No testing done on building geno chromosome files!
+make_chromosome_files = False	# Has bug where headings written but no genotyeps
 chromosomes = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','x']
 
 output_dir = None
@@ -73,6 +75,30 @@ pheno_filename_prefixes = {female:'female',male:'male',hetero:'hetero'}	# change
 pheno_filename_suffix = 'csvsr_pheno.csv'
 main_geno_filename_prefix = 'main'
 geno_filename_suffix = 'csvsr_geno.csv'
+
+'''Specification for number of digits to keep after rounding an average of phenotype values)
+	Options for rounding_method:
+		round.fixed: use set_max_decimal_digits() to specify number decimal places
+						to keep after rounding
+						e.g. (1.000, 1.00, 1)/3 and set_max_decimal_digits(1)
+							rounds to 1.0 (1 decimal digit, non-deterministic # sigfigs)
+						e.g. (1.000, 1.00, 1)/3 and set_max_decimal_digits(4)
+							rounds to 1.0000 (4 decimal digits, non-deterministic # sigfigs)
+		round.max: script looks at list of values to be averaged and keeps
+						as many sigfigs as the value with most number sigfigs
+						e.g. (1.00, 1.0, 1)/3 rounds to 1.00
+						(3 sigfigs, non-deterministic # decimal digits)
+		round.proper: script looks at list of values to be averaged and keeps
+						as many sigfigs as the value with the fewest sigfigs
+						(best method for rounding if list of values to be
+						averaged are all specified in scientific notation w/
+						appropriate precision)
+						e.g. (1.00, 1.0, 1)/3 rounds to 1
+						(1 sigfig, non-deterministic # decimal digits)
+		None: no rounding done, max digits kept (Default: 28 digits)'''
+rounding_method = round.fixed
+# relevant only if round.fixed specified
+round.fixed.set_max_decimal_digits(2)
 
 #######################################################
 ##   Main program:
@@ -228,11 +254,14 @@ class Individual(object):
 			value = Individual.missing_value
 		return(value)
 
+
 class Individual_averaged(Individual):
 	'''
 	Stores phenotype data for all individuals of same sex of a single strain.
 	Alternative to Individual class for when phenotype values are to be averaged.
 	'''
+	rounding_method_for_averaging = rounding_method	# access global var. set by user
+
 	def __init__(self, line, sex_label):
 		self.strain = line[Individual.strain_column_index]
 		self.sex = sex_label_as_numeric[sex_label.lower()]
@@ -270,30 +299,48 @@ class Individual_averaged(Individual):
 		Returns average of a list of phenotype values. The parameter is used to
 		simplify the process of specifying which
 		'''
+		rounding_method = Individual_averaged.rounding_method_for_averaging
 		# context set globally for all Decimal arithmetic, not just for this instance of method
 		setcontext( Context( prec=None, rounding=None ) )
 		# check if no values to average
 		if len(phenotype_values) == 1 and phenotype_values[0] == Individual_averaged.missing_value:
 			return( Individual_averaged.missing_value )
 
-		sum_phenotype_values = Decimal('0')
-		num_phenotypes = Decimal('0')
-		min_significant_figures = Decimal('+Inf')
+		# used in calculation of average and when rounding_method is round.max
+		sum_phenotype_values = Precise_value('0')
+		# used in calculation of average
+		num_phenotypes = Precise_value('0')
+		# used when rounding_method is round.proper
+		min_decimal_digits = Precise_value('+Inf')
+		# calculate sum
 		for phenotype_value in phenotype_values:
-			# find operand with fewest significant figures
-			sigfig_count = num_sigfigs(phenotype_value)
-			if sigfig_count < min_significant_figures:
-				min_significant_figures = sigfig_count
+			# find minimum number of decimal digits of any of the values
+			if round.proper is rounding_method:
+				decimal_digit_count = num_decimal_digits(phenotype_value)
+				if decimal_digit_count < min_decimal_digits:
+					min_decimal_digits = decimal_digit_count
 
 			# add value to sum
 			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
 			num_phenotypes = num_phenotypes + 1
-		# context set globally for all Decimal arithmetic, not just for this instance of method
-		setcontext( Context( prec=min_significant_figures, rounding=ROUND_HALF_EVEN) )
-		# calculate average, round based on min_significant_figures
+
+		# used by all rounding_method types
 		average = sum_phenotype_values / num_phenotypes
-		# find out if answer has a decimal poin
-		return( str(average) )
+		if round.proper is rounding_method:	# i.e. proper sigfig rounding, assuming inputs are in scientific notation
+			context = Context( prec=num_sigfigs(str(sum_phenotype_values)),
+						rounding=ROUND_HALF_EVEN)
+			average_rounded = context.create_decimal(average)
+		elif round.max is rounding_method:	# keep only as many digits as the sum
+			# python addition naturally keeps all decimal places
+			context = Context( prec=num_sigfigs(str(sum_phenotype_values)),
+						rounding=ROUND_HALF_EVEN)
+			average_rounded = context.create_decimal(average)
+		elif round.fixed is rounding_method:
+			average_rounded = average.quantize(round.fixed.max_decimal_digits,
+						rounding=ROUND_HALF_EVEN)
+		else:
+			'''No rounding done, ungodly number of decimal places kept'''
+		return( str(average_rounded) )
 
 
 class Strains(object):
@@ -349,29 +396,6 @@ class Strains(object):
 		individual = Individual(line)
 		individual.add(line)	# add line of data to Individual object
 		self.strains[strain].append(individual)
-
-
-def num_sigfigs(value):
-	'''
-	Counts number of significant figures in a numeric string.
-	TODO: replace regex w/ conditional logic (regex decreased efficiency by 10%)
-	'''
-	# remove scientific notation characters
-		# -03.05E+4 -> 03.05
-	parsed_value = re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value)
-	# remove leading zeroes to left of decimal point, keeping at most 1 zero
-		# e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0
-	parsed_value = re.sub(r'^0*(\d.*)$', r'\1', parsed_value)
-	# remove leading zeroes to right of decimal point, plus any immediately to
-	# the left of decimal point, if value < 1
-		# e.g. .05E+4 -> 5E+4    or   0.01 -> .1
-	parsed_value = re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', parsed_value)
-	# remove trailing zeroes to right of integer w/ no decimal point
-		# e.g. 100 -> 1   but   100. -> 100.
-	parsed_value = re.sub(r'^([1-9]+)0*$', r'\1', parsed_value)
-	# remove decimal point
-	parsed_value = re.sub(r'\.', r'', parsed_value)
-	return( len(parsed_value) )
 
 def is_numeric(string):
 	try:
@@ -438,19 +462,16 @@ def sort_markers( markers_raw, connection ):
 			markers_raw.pop(marker)		# ensure that each marker_identifier is unique/included only once
 	return(markers_ordered)
 
-
-def sql_format(list):
-	'''Format a list for use in an sql query's where-clause'''
-	return( '[' + '],['.join(list) + ']')
-
-
 def rqtl_format(list):
 	'''Sanitize strain names'''
 	new_list = []
 	for item in list:
 		new_list.append(item.replace('/','.'))
-	return(new_list)
+		return(new_list)
 
+def sql_format(list):
+	'''Format a list for use in an sql query's where-clause'''
+	return( '[' + '],['.join(list) + ']')
 
 def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 	'''Main function for building genotype file(s)'''
@@ -545,7 +566,6 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 		geno_file_builder.file.close()
 
 	connection.close()
-
 
 def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 	'''Main function for building phenotype files'''

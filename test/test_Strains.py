@@ -71,6 +71,8 @@ class test_averaged(unittest.TestCase):
 
 class test_not_averaged(unittest.TestCase):
 	def verify(self, individual_rows, correct_rows):
+		'''Iterate over all an individual's phenotypes and make sure they are
+		the same as the ones with which it was created'''
 		correct_rows = (correct_rows[Individual.first_phenotype_column_index:]+
 						[sex_label_as_numeric[correct_rows[Individual.sex_column_index]]] +
 						[correct_rows[Individual.iid_column_index]])
