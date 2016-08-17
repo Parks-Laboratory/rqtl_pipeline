@@ -36,7 +36,7 @@ from math import *		# for rounding
 import re				# for determining true count of significant digits
 						# in a numeric string
 from enum import Enum
-from precise_value import *
+import precise_value
 #######################################################
 ##   Global fields (do not change):
 #######################################################
@@ -54,21 +54,6 @@ female = 'female'
 male = 'male'
 hetero = 'hetero'
 sex_label_as_numeric = {female:0,male:1}		# maps sex labels to numeric indicator
-
-class round(Enum):
-	'''Adjusted by user in "Parameters set up user" section,
-	used by Individual_averaged.average()'''
-	proper = 'round.proper'
-	max = 'round_max'
-	fixed = 'round_fixed'
-
-	def __init__(self, description):
-		self.description = description
-		self.max_decimal_digits = None
-
-	def set_max_decimal_digits(self, max_decimal_digits):
-		'''Used only for fixed-decimal-digit rounding'''
-		self.max_decimal_digits = Decimal(str(pow(10,-max_decimal_digits)))
 
 #######################################################
 ##   Parameters set by user (change as desired/needed):
