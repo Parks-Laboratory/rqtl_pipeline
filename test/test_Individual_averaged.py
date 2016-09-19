@@ -27,6 +27,7 @@ class test_add(unittest.TestCase):
 class test_num_sigfigs(unittest.TestCase):
 	'''Technically not a function of Individual_averaged class, but heavily used by it'''
 	def test_values_greater_than_or_equal_to_1(self):
+		num_sigfigs = Rounded_value.num_significant_digits
 		self.assertEqual(num_sigfigs('1.5'), 2)
 		self.assertEqual(num_sigfigs('2'), 1)
 		self.assertEqual(num_sigfigs('-3'), 1)
@@ -37,6 +38,7 @@ class test_num_sigfigs(unittest.TestCase):
 		self.assertEqual(num_sigfigs('100.'), 3)
 
 	def test_values_less_than_1(self):
+		num_sigfigs = Rounded_value.num_significant_digits
 		self.assertEqual(num_sigfigs('0'), 1)
 		self.assertEqual(num_sigfigs('0.0'), 1)
 		self.assertEqual(num_sigfigs('.5'), 1)
@@ -45,6 +47,7 @@ class test_num_sigfigs(unittest.TestCase):
 		self.assertEqual(num_sigfigs('.00003'), 1)
 
 	def test_scientific_notation(self):
+		num_sigfigs = Rounded_value.num_significant_digits
 		self.assertEqual(num_sigfigs('05.5+1'), 2)
 		self.assertEqual(num_sigfigs('3E+5'), 1)
 		self.assertEqual(num_sigfigs('5E-7'), 1)
@@ -52,6 +55,7 @@ class test_num_sigfigs(unittest.TestCase):
 		self.assertEqual(num_sigfigs('05.34E-7'), 3)
 		self.assertEqual(num_sigfigs('-05.34E-7'), 3)
 
+@unittest.skip("no plan to re-implement")
 class test_average_round_min(unittest.TestCase):
 	def setUp(self):
 		Individual_averaged.rounding_method_for_averaging=round.min
@@ -65,7 +69,6 @@ class test_average_round_min(unittest.TestCase):
 		self.assertNotEqual(self.individual_averaged.average(values_to_average), true_avg)
 
 	def test_single_value(self):
-<<<<<<< HEAD
 		self.assertAvgEqual(['23.3'], '23.3')	# sigfigs=3
 		self.assertAvgEqual(['.3'], '0.3')		# sf=1
 		self.assertAvgEqual(['-.3'], '-0.3')	# sf=1
@@ -106,7 +109,6 @@ class test_average_round_min(unittest.TestCase):
 		self.assertAvgEqual(['2.5500','1.00'], '1.78')	# avg=1.775, sigfigs=3
 		self.assertAvgEqual(['2.550','1.00000'], '1.775')	# avg=1.775, sigfigs=4
 		self.assertAvgEqual(['2.5500','02.55'], '2.55')	# avg=1.775, sigfigs=3
-=======
 		self.assertAvgEqual(['23.3'], '23.3')	# sum= 23.3, sf=1, avg=24.3
 		self.assertAvgEqual(['.3'], '0.3')		# sum= 0.3, sf=1, avg=24.3
 		self.assertAvgEqual(['-.3'], '-0.3')	# sum= -0.3, sf=1, avg=24.3
@@ -146,16 +148,12 @@ class test_average_round_min(unittest.TestCase):
 		self.assertAvgEqual(['2.5500','1.00'], '1.78')	# sum= , sf=3, avg=1.775
 		self.assertAvgEqual(['2.550','1.00000'], '1.775')	# sum= , sf=4, avg=1.775
 		self.assertAvgEqual(['2.5500','02.55'], '2.55')	# sum= , sf=3, avg=1.775
->>>>>>> refs/remotes/origin/2_decimals_precision
 
 	def test_round_even_with_5(self):
 		# check that a 5 rounds last significant digit up if that digit is odd,
 		# but does merely truncates everything after that digit if it's even
-<<<<<<< HEAD
 		self.assertAvgEqual(['3.5','2.0','2.15'], '2.6')	# avg=2.55, sigfigs=2
 		self.assertAvgEqual(['3.5','2.0','2.45'], '2.6')	# avg=2.65, sigfigs=2
-		values=['-']
-=======
 		self.assertAvgEqual(['3.5','2.0','2.15'], '2.6')	# sum= , sf=2, avg=2.55
 		self.assertAvgEqual(['3.5','2.0','2.45'], '2.6')	# sum= , sf=2, avg=2.65
 
@@ -164,19 +162,15 @@ class test_average_round_min(unittest.TestCase):
 		self.assertAvgEqual(['.05','-.95','.85'], '-0.02') # sum=0.05, sf=1, avg=-0.01666...
 		self.assertAvgEqual(['49.7','50.2','50'], '5E+1')	# sum= , sf=1, avg=49.9666...
 		self.assertAvgEqual(['6.55','3.55'], '5.05')	# sum=10.10, sf=3, avg=5.05
->>>>>>> refs/remotes/origin/2_decimals_precision
 
 	def test_missing_value(self):
 		self.assertAvgEqual([self.individual_averaged.missing_value],
 			self.individual_averaged.missing_value)
 
-<<<<<<< HEAD
-=======
-
 
 class test_average_round_max(unittest.TestCase):
 	def setUp(self):
-		Individual_averaged.rounding_method_for_averaging=round.max
+		Individual_averaged.rounding_method_for_averaging=Rounded_value.max
 		self.line=['iid','strain','male']
 		self.individual_averaged=Individual_averaged(self.line, 'female')
 
@@ -244,7 +238,6 @@ class test_average_round_max(unittest.TestCase):
 			self.individual_averaged.missing_value)
 
 
->>>>>>> refs/remotes/origin/2_decimals_precision
 #
 # if __name__ == '__main__':
 # 	suite_names=[test__init__, test_add, test_num_sigfigs, test_average]
