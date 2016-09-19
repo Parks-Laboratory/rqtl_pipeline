@@ -328,36 +328,14 @@ class Individual_averaged(Individual):
 
 		# calculate sum
 		for phenotype_value in phenotype_values:
-<<<<<<< HEAD
-=======
-			# find number significant figures of operand with fewest sigfigs
-			if round.min is rounding_method:
-				sigfig_count = num_sigfigs(phenotype_value)
-				if sigfig_count < min_significant_figures:
-					min_significant_figures = sigfig_count
 
 			# add value to sum
->>>>>>> refs/remotes/origin/2_decimals_precision
 			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
 			num_phenotypes = num_phenotypes + 1
 
 		# calculate average
 		average = sum_phenotype_values / num_phenotypes
 		if round.min is rounding_method:	# i.e. proper sigfig rounding, assuming inputs are in scientific notation
-<<<<<<< HEAD
-=======
-			context = Context( prec=min_significant_figures,
-						rounding=ROUND_HALF_EVEN)
-			average_rounded = context.create_decimal(average)
-		elif round.max is rounding_method:	# keep only as many digits as the sum
-			# python addition naturally keeps all decimal places
->>>>>>> refs/remotes/origin/2_decimals_precision
-			context = Context( prec=num_sigfigs(str(sum_phenotype_values)),
-						rounding=ROUND_HALF_EVEN)
-			average_rounded = context.create_decimal(average)
-		elif round.fixed is rounding_method:
-			average_rounded = average.quantize(round.fixed.max_decimal_digits,
-						rounding=ROUND_HALF_EVEN)
 		else:
 			'''No rounding done, ungodly number of decimal places kept'''
 		return( str(average_rounded) )
