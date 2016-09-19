@@ -62,13 +62,23 @@ class Rounded_value(Enum):
 	max = 'round_max'
 	fixed = 'round_fixed'
 
-	def __init__(self, description):
-		self.description = description
-		self.max_decimal_digits = None
+    def num_significant_digits(value):
+        '''Counts number of significant figures in a numeric string.'''
+        parsed_value = get_significant_digits(value)
+        parsed_value = remove_decimal_point(parsed_value)
+        return( len( parsed_value ) )
 
-	def set_max_decimal_digits(self, max_decimal_digits):
-		'''Used only for fixed-decimal-digit rounding'''
-		self.max_decimal_digits = Decimal(str(pow(10,-max_decimal_digits)))
+    def get_significant_digits(value):
+        '''Remove non digits, undesired zeroes, scientific notation characters,
+        but leave the decimal point.
+            e.g. -034.5E+3 -> 34.5    or   0.004 -> .4'''
+        parsed_value = remove_non_digits(value)
+        parsed_value = remove_leading_zeroes(parsed_value)
+        parsed_value = remove_decimal_placeholding_zeroes(parsed_value)
+        return( parsed_value )
+
+	def remove_decimal_point(value):
+        return( re.sub(r'\.', r'', value) )
 
     def remove_non_digits(value):
         '''Remove scientific notation characters and negation sign
@@ -83,7 +93,7 @@ class Rounded_value(Enum):
     def remove_decimal_placeholding_zeroes(value):
         '''Remove leading zeroes to right of decimal point, plus any immediately to
         the left of decimal point, if value < 1
-        e.g. .05 -> .5    or   0.01 -> .1'''
+        e.g. .05 -> .5    or   0.01 -> .1   but  0.0 -> .0'''
         return( re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', value) )
 
     def remove_integral_placeholding_zeroes(value):
@@ -347,7 +357,7 @@ class Individual_averaged(Individual):
 		# calculate average
 		average = sum_phenotype_values / num_phenotypes
 		average_rounded = average
-		if round.max is rounding_method:
+		if Rounded_value.max is rounding_method:
 		return( str(average_rounded) )
 
 
