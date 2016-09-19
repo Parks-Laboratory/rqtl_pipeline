@@ -55,7 +55,7 @@ male = 'male'
 hetero = 'hetero'
 sex_label_as_numeric = {female:0,male:1}		# maps sex labels to numeric indicator
 
-class round(Enum):
+class Rounded_value(Enum):
 	'''Adjusted by user in "Parameters set up user" section,
 	used by Individual_averaged.average()'''
 	min = 'round_min'
@@ -69,6 +69,27 @@ class round(Enum):
 	def set_max_decimal_digits(self, max_decimal_digits):
 		'''Used only for fixed-decimal-digit rounding'''
 		self.max_decimal_digits = Decimal(str(pow(10,-max_decimal_digits)))
+
+    def remove_non_digits(value):
+        '''Remove scientific notation characters and negation sign
+        	-03.05E+4 -> 03.05'''
+        return( re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value) )
+
+    def remove_leading_zeroes(value):
+        '''Remove leading zeroes to left of decimal point, keeping at most 1 zero
+        e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0'''
+        return( re.sub(r'^0*(\d\.?\d*)$', r'\1', value) )
+
+    def remove_decimal_placeholding_zeroes(value):
+        '''Remove leading zeroes to right of decimal point, plus any immediately to
+        the left of decimal point, if value < 1
+        e.g. .05 -> .5    or   0.01 -> .1'''
+        return( re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', value) )
+
+    def remove_integral_placeholding_zeroes(value):
+        '''Remove trailing zeroes to right of integer w/ no decimal point
+        e.g. 100 -> 1   but   100. -> 100.'''
+        return( re.sub(r'^([1-9]+)0*$', r'\1', value) )
 
 #######################################################
 ##   Parameters set by user (change as desired/needed):
