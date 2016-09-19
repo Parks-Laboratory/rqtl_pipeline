@@ -325,10 +325,11 @@ class Individual_averaged(Individual):
 		sum_phenotype_values = Decimal('0')
 		# used in calculation of average
 		num_phenotypes = Decimal('0')
-		# used when rounding_method is round.min
-		min_significant_figures = Decimal('+Inf')
+
 		# calculate sum
 		for phenotype_value in phenotype_values:
+<<<<<<< HEAD
+=======
 			# find number significant figures of operand with fewest sigfigs
 			if round.min is rounding_method:
 				sigfig_count = num_sigfigs(phenotype_value)
@@ -336,17 +337,21 @@ class Individual_averaged(Individual):
 					min_significant_figures = sigfig_count
 
 			# add value to sum
+>>>>>>> refs/remotes/origin/2_decimals_precision
 			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
 			num_phenotypes = num_phenotypes + 1
 
-		# used by all rounding_method types
+		# calculate average
 		average = sum_phenotype_values / num_phenotypes
 		if round.min is rounding_method:	# i.e. proper sigfig rounding, assuming inputs are in scientific notation
+<<<<<<< HEAD
+=======
 			context = Context( prec=min_significant_figures,
 						rounding=ROUND_HALF_EVEN)
 			average_rounded = context.create_decimal(average)
 		elif round.max is rounding_method:	# keep only as many digits as the sum
 			# python addition naturally keeps all decimal places
+>>>>>>> refs/remotes/origin/2_decimals_precision
 			context = Context( prec=num_sigfigs(str(sum_phenotype_values)),
 						rounding=ROUND_HALF_EVEN)
 			average_rounded = context.create_decimal(average)
