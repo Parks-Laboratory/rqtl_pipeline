@@ -328,12 +328,30 @@ class Individual_averaged(Individual):
 
 		# calculate sum
 		for phenotype_value in phenotype_values:
+<<<<<<< HEAD
+=======
+			# find number significant figures of operand with fewest sigfigs
+			if round.min is rounding_method:
+				sigfig_count = num_sigfigs(phenotype_value)
+				if sigfig_count < min_significant_figures:
+					min_significant_figures = sigfig_count
+
+			# add value to sum
+>>>>>>> refs/remotes/origin/2_decimals_precision
 			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
 			num_phenotypes = num_phenotypes + 1
 
 		# calculate average
 		average = sum_phenotype_values / num_phenotypes
 		if round.min is rounding_method:	# i.e. proper sigfig rounding, assuming inputs are in scientific notation
+<<<<<<< HEAD
+=======
+			context = Context( prec=min_significant_figures,
+						rounding=ROUND_HALF_EVEN)
+			average_rounded = context.create_decimal(average)
+		elif round.max is rounding_method:	# keep only as many digits as the sum
+			# python addition naturally keeps all decimal places
+>>>>>>> refs/remotes/origin/2_decimals_precision
 			context = Context( prec=num_sigfigs(str(sum_phenotype_values)),
 						rounding=ROUND_HALF_EVEN)
 			average_rounded = context.create_decimal(average)
@@ -399,15 +417,15 @@ class Strains(object):
 		individual.add(line)	# add line of data to Individual object
 		self.strains[strain].append(individual)
 
+def num_decimals(value):
+	'''Counts number of significant digits to right of decimal point'''
 
 def num_sigfigs(value):
 	'''
 	Counts number of significant figures in a numeric string.
 	TODO: replace regex w/ conditional logic (regex decreased efficiency by 10%)
 	'''
-	# remove scientific notation characters
-		# -03.05E+4 -> 03.05
-	parsed_value = re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value)
+	parsed_value = remove_non_digits()
 	# remove leading zeroes to left of decimal point, keeping at most 1 zero
 		# e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0
 	parsed_value = re.sub(r'^0*(\d.*)$', r'\1', parsed_value)
@@ -428,6 +446,11 @@ def is_numeric(string):
 		return(True)
 	except InvalidOperation:
 		return(False)
+
+def remove_non_digits(value):
+	'''Remove scientific notation characters and negation sign
+		-03.05E+4 -> 03.05'''
+	return( re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value) )
 
 def sanitize(dirty_string):
 	'''Remove undesirable characters from a string'''
