@@ -26,7 +26,7 @@ Future ideas:
 	-May be able to simplifiy script using Pandas Scientific Computing library
 	-Script can be vastly simplified if phenotype data stored in database
 '''
-import pyodbc
+# import pyodbc		TODO uncomment once server has been re-started and pydobc installed
 import os
 import sys
 import time				# for script-duration stats presented to user
@@ -62,44 +62,44 @@ class Rounded_value(Enum):
 	max = 'round_max'
 	fixed = 'round_fixed'
 
-    def num_significant_digits(value):
-        '''Counts number of significant figures in a numeric string.'''
-        parsed_value = get_significant_digits(value)
-        parsed_value = remove_decimal_point(parsed_value)
-        return( len( parsed_value ) )
+	def num_significant_digits(value):
+		'''Counts number of significant figures in a numeric string.'''
+		parsed_value = Rounded_value.get_significant_digits(value)
+		parsed_value = Rounded_value.remove_decimal_point(parsed_value)
+		return( len( parsed_value ) )
 
-    def get_significant_digits(value):
-        '''Remove non digits, undesired zeroes, scientific notation characters,
-        but leave the decimal point.
-            e.g. -034.5E+3 -> 34.5    or   0.004 -> .4'''
-        parsed_value = remove_non_digits(value)
-        parsed_value = remove_leading_zeroes(parsed_value)
-        parsed_value = remove_decimal_placeholding_zeroes(parsed_value)
-        return( parsed_value )
+	def get_significant_digits(value):
+		'''Remove non digits, undesired zeroes, scientific notation characters,
+		but leave the decimal point.
+			e.g. -034.5E+3 -> 34.5    or   0.004 -> .4'''
+		parsed_value = Rounded_value.remove_non_digits(value)
+		parsed_value = Rounded_value.remove_leading_zeroes(parsed_value)
+		parsed_value = Rounded_value.remove_decimal_placeholding_zeroes(parsed_value)
+		return( parsed_value )
 
 	def remove_decimal_point(value):
-        return( re.sub(r'\.', r'', value) )
+		return( re.sub(r'\.', r'', value) )
 
-    def remove_non_digits(value):
-        '''Remove scientific notation characters and negation sign
-        	-03.05E+4 -> 03.05'''
-        return( re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value) )
+	def remove_non_digits(value):
+		'''Remove scientific notation characters and negation sign
+			-03.05E+4 -> 03.05'''
+		return( re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value) )
 
-    def remove_leading_zeroes(value):
-        '''Remove leading zeroes to left of decimal point, keeping at most 1 zero
-        e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0'''
-        return( re.sub(r'^0*(\d\.?\d*)$', r'\1', value) )
+	def remove_leading_zeroes(value):
+		'''Remove leading zeroes to left of decimal point, keeping at most 1 zero
+		e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0'''
+		return( re.sub(r'^0*(\d\.?\d*)$', r'\1', value) )
 
-    def remove_decimal_placeholding_zeroes(value):
-        '''Remove leading zeroes to right of decimal point, plus any immediately to
-        the left of decimal point, if value < 1
-        e.g. .05 -> .5    or   0.01 -> .1   but  0.0 -> .0'''
-        return( re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', value) )
+	def remove_decimal_placeholding_zeroes(value):
+		'''Remove leading zeroes to right of decimal point, plus any immediately to
+		the left of decimal point, if value < 1
+		e.g. .05 -> .5    or   0.01 -> .1   but  0.0 -> .0'''
+		return( re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', value) )
 
-    def remove_integral_placeholding_zeroes(value):
-        '''Remove trailing zeroes to right of integer w/ no decimal point
-        e.g. 100 -> 1   but   100. -> 100.'''
-        return( re.sub(r'^([1-9]+)0*$', r'\1', value) )
+	def remove_integral_placeholding_zeroes(value):
+		'''Remove trailing zeroes to right of integer w/ no decimal point
+		e.g. 100 -> 1   but   100. -> 100.'''
+		return( re.sub(r'^([1-9]+)0*$', r'\1', value) )
 
 #######################################################
 ##   Parameters set by user (change as desired/needed):
@@ -142,7 +142,7 @@ geno_filename_suffix = 'csvsr_geno.csv'
 						e.g. (1.00, 1.0, 1)/3 rounds to 1
 						(1 sigfig, non-deterministic # decimal digits)
 		None: no rounding done, max digits kept (Default: 28 digits)'''
-rounding_method = round.max
+rounding_method = Rounded_value.max
 
 #######################################################
 ##   Main program:
@@ -344,20 +344,25 @@ class Individual_averaged(Individual):
 		simplify the process of specifying which
 		'''
 		rounding_method = Individual_averaged.rounding_method_for_averaging
-		# context set globally for all Decimal arithmetic, not just for this instance of method
-		setcontext( Context( prec=None, rounding=None ) )
 		# check if no values to average
 		num_phenotype_values = len(phenotype_values)
 		if num_phenotype_values == 1 and phenotype_values[0] == Individual_averaged.missing_value:
 			return( Individual_averaged.missing_value )
 
+		# context set globally for all Decimal arithmetic, not just for this instance of method
+		setcontext( Context( prec=None, rounding=None ) )
 		# used in calculation of average and when rounding_method is round.max
-		sum_phenotype_values = sum(phenotype_values)
+		sum_phenotype_values = Decimal('0')
+		for phenotype_value in phenotype_values:
+			sum_phenotype_values += Decimal(phenotype_value)
 
 		# calculate average
-		average = sum_phenotype_values / num_phenotypes
+		average = sum_phenotype_values / len(phenotype_values)
 		average_rounded = average
 		if Rounded_value.max is rounding_method:
+			num_sigfigs = Rounded_value.num_significant_digits(str(average))
+			setcontext(Context(prec=num_sigfigs, rounding=ROUND_HALF_EVEN))
+			average_rounded = +average
 		return( str(average_rounded) )
 
 
