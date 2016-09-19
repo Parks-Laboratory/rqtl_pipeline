@@ -111,9 +111,7 @@ geno_filename_suffix = 'csvsr_geno.csv'
 						e.g. (1.00, 1.0, 1)/3 rounds to 1
 						(1 sigfig, non-deterministic # decimal digits)
 		None: no rounding done, max digits kept (Default: 28 digits)'''
-rounding_method = round.fixed
-# relevant only if round.fixed specified
-round.fixed.set_max_decimal_digits(2)
+rounding_method = round.max
 
 #######################################################
 ##   Main program:
@@ -318,26 +316,17 @@ class Individual_averaged(Individual):
 		# context set globally for all Decimal arithmetic, not just for this instance of method
 		setcontext( Context( prec=None, rounding=None ) )
 		# check if no values to average
-		if len(phenotype_values) == 1 and phenotype_values[0] == Individual_averaged.missing_value:
+		num_phenotype_values = len(phenotype_values)
+		if num_phenotype_values == 1 and phenotype_values[0] == Individual_averaged.missing_value:
 			return( Individual_averaged.missing_value )
 
 		# used in calculation of average and when rounding_method is round.max
-		sum_phenotype_values = Decimal('0')
-		# used in calculation of average
-		num_phenotypes = Decimal('0')
-
-		# calculate sum
-		for phenotype_value in phenotype_values:
-
-			# add value to sum
-			sum_phenotype_values = sum_phenotype_values + Decimal(phenotype_value)
-			num_phenotypes = num_phenotypes + 1
+		sum_phenotype_values = sum(phenotype_values)
 
 		# calculate average
 		average = sum_phenotype_values / num_phenotypes
-		if round.min is rounding_method:	# i.e. proper sigfig rounding, assuming inputs are in scientific notation
-		else:
-			'''No rounding done, ungodly number of decimal places kept'''
+		average_rounded = average
+		if round.max is rounding_method:
 		return( str(average_rounded) )
 
 
