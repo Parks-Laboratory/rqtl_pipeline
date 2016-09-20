@@ -7,3 +7,6 @@ Requirements:
 
 Procedure:
 -Open command-line in directory with input files
+
+(more documentation to come...)
+
