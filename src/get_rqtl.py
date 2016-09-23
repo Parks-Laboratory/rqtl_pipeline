@@ -166,23 +166,10 @@ geno_filename_suffix = 'csvsr_geno.csv'
 
 '''Specification for number of digits to keep after rounding an average of phenotype values)
 	Options for rounding_method:
-		round.fixed: use set_max_decimal_digits() to specify number decimal places
-						to keep after rounding
-						e.g. (1.000, 1.00, 1)/3 and set_max_decimal_digits(1)
-							rounds to 1.0 (1 decimal digit, non-deterministic # sigfigs)
-						e.g. (1.000, 1.00, 1)/3 and set_max_decimal_digits(4)
-							rounds to 1.0000 (4 decimal digits, non-deterministic # sigfigs)
 		round.max: script looks at list of values to be averaged and keeps
 						as many sigfigs as the value with most number sigfigs
 						e.g. (1.00, 1.0, 1)/3 rounds to 1.00
 						(3 sigfigs, non-deterministic # decimal digits)
-		round.min: script looks at list of values to be averaged and keeps
-						as many sigfigs as the value with the fewest sigfigs
-						(best method for rounding if list of values to be
-						averaged are all specified in scientific notation w/
-						appropriate precision)
-						e.g. (1.00, 1.0, 1)/3 rounds to 1
-						(1 sigfig, non-deterministic # decimal digits)
 		None: no rounding done, max digits kept (Default: 28 digits)'''
 rounding_method = Rounded_value.max
 
