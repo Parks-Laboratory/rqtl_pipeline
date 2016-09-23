@@ -25,7 +25,11 @@ Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <outpu
 		<hetero pheno_sexes_filename_prefix><pheno_filename_suffix>
 
 Notes:
-	get_genotypes() is dependent on results from get_phenotypes()
+	-get_genotypes() is dependent on results from get_phenotypes() so that
+	the order of rows in the final files match up
+
+Knwon issues:
+	-cannot split up genotype file into one file per chromosome due to bug
 
 Future ideas:
 	-Use argparse library to parse command-line arguments
@@ -35,7 +39,7 @@ Future ideas:
 	-May be able to simplifiy script using Pandas Scientific Computing library
 	-Script can be vastly simplified if phenotype data stored in database
 '''
-# import pyodbc		TODO uncomment once server has been re-started and pydobc installed
+import pyodbc
 import os
 import sys
 import time				# for script-duration stats presented to user
