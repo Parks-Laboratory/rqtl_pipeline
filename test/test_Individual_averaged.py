@@ -24,37 +24,6 @@ class test_add(unittest.TestCase):
 	def test_minimal(self):
 		self.individual_averaged.add(self.line)
 
-class test_num_sigfigs(unittest.TestCase):
-	'''Technically not a function of Individual_averaged class, but heavily used by it'''
-	def test_values_greater_than_or_equal_to_1(self):
-		num_sigfigs = Rounded_value.num_significant_digits
-		self.assertEqual(num_sigfigs('1.5'), 2)
-		self.assertEqual(num_sigfigs('2'), 1)
-		self.assertEqual(num_sigfigs('-3'), 1)
-		self.assertEqual(num_sigfigs('05'), 1)
-		self.assertEqual(num_sigfigs('1.001'), 4)
-		self.assertEqual(num_sigfigs('1.00'), 3)
-		self.assertEqual(num_sigfigs('100'), 1)
-		self.assertEqual(num_sigfigs('100.'), 3)
-
-	def test_values_less_than_1(self):
-		num_sigfigs = Rounded_value.num_significant_digits
-		self.assertEqual(num_sigfigs('0'), 1)
-		self.assertEqual(num_sigfigs('0.0'), 1)
-		self.assertEqual(num_sigfigs('.5'), 1)
-		self.assertEqual(num_sigfigs('0.5'), 1)
-		self.assertEqual(num_sigfigs('0.000243'), 3)
-		self.assertEqual(num_sigfigs('.00003'), 1)
-
-	def test_scientific_notation(self):
-		num_sigfigs = Rounded_value.num_significant_digits
-		self.assertEqual(num_sigfigs('05.5+1'), 2)
-		self.assertEqual(num_sigfigs('3E+5'), 1)
-		self.assertEqual(num_sigfigs('5E-7'), 1)
-		self.assertEqual(num_sigfigs('5.34E-7'), 3)
-		self.assertEqual(num_sigfigs('05.34E-7'), 3)
-		self.assertEqual(num_sigfigs('-05.34E-7'), 3)
-
 @unittest.skip("no plan to re-implement")
 class test_average_round_min(unittest.TestCase):
 	def setUp(self):
