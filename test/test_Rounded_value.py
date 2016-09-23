@@ -2,6 +2,42 @@ from src.get_rqtl import *
 import unittest
 
 class test_Rounded_value_max(unittest.TestCase):
+	def test_num_significant_digits(self):
+		'''Count integral placeholding zeroes as significant'''
+		nsd = Rounded_value.num_significant_digits
+
+		self.assertEqual(nsd('0'), 1)
+		self.assertEqual(nsd('1'), 1)
+		self.assertEqual(nsd('10'), 2)
+		self.assertEqual(nsd('11'), 2)
+		self.assertEqual(nsd('00'), 1)
+		self.assertEqual(nsd('01'), 1)
+		self.assertEqual(nsd('010'), 2)
+		self.assertEqual(nsd('011'), 2)
+		self.assertEqual(nsd('-0.1'), 1)
+		self.assertEqual(nsd('-1.1'), 2)
+		self.assertEqual(nsd('-1'), 1)
+		self.assertEqual(nsd('-10'), 2)
+		self.assertEqual(nsd('-001'), 1)
+		self.assertEqual(nsd('-010'), 2)
+		self.assertEqual(nsd('10.'), 2)
+		self.assertEqual(nsd('10E4'), 2)
+		self.assertEqual(nsd('10.E4'), 2)
+		self.assertEqual(nsd('.02E4'), 1)
+		self.assertEqual(nsd('-1.2E3'), 2)
+		self.assertEqual(nsd('1.2E3'), 2)
+		self.assertEqual(nsd('1.1'), 2)
+		self.assertEqual(nsd('0.0'), 1)
+		self.assertEqual(nsd('-0.1'), 1)
+		self.assertEqual(nsd('-01.1'), 2)
+		self.assertEqual(nsd('-01.2E3'), 2)
+		self.assertEqual(nsd('0.1'), 1)
+		self.assertEqual(nsd('01.1'), 2)
+		self.assertEqual(nsd('01.2E3'), 2)
+		self.assertEqual(nsd('123456789'), 9)
+		self.assertEqual(nsd('12345.6789'), 9)
+		self.assertEqual(nsd('.123456789'), 9)
+
 	def test_remove_decimal_point(self):
 		rdp = Rounded_value.remove_decimal_point
 
