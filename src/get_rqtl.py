@@ -346,8 +346,6 @@ class Individual_averaged(Individual):
 	Stores phenotype data for all individuals of same sex of a single strain.
 	Alternative to Individual class for when phenotype values are to be averaged.
 	'''
-	rounding_method_for_averaging = rounding_method	# access global var. set by user
-
 	def __init__(self, line, sex_label):
 		self.strain = line[Individual.strain_column_index]
 		self.sex = sex_label_as_numeric[sex_label.lower()]
@@ -385,7 +383,6 @@ class Individual_averaged(Individual):
 		Returns average of a list of phenotype values. The parameter is used to
 		simplify the process of specifying which
 		'''
-		rounding_method = Individual_averaged.rounding_method_for_averaging
 		# check if no values to average
 		num_phenotype_values = len(phenotype_values)
 		if num_phenotype_values == 1 and phenotype_values[0] == Individual_averaged.missing_value:
@@ -401,8 +398,9 @@ class Individual_averaged(Individual):
 		# calculate average
 		average = sum_phenotype_values / len(phenotype_values)
 		average_rounded = average
+		# access global var. rounding_method set by user
 		if Rounded_value.max is rounding_method:
-			num_sigfigs = Rounded_value.num_significant_digits(str(average))
+			num_sigfigs = Rounded_value.num_significant_digits(str(sum_phenotype_values))
 			setcontext(Context(prec=num_sigfigs, rounding=ROUND_HALF_EVEN))
 			average_rounded = +average
 		return( str(average_rounded) )
