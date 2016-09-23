@@ -7,6 +7,15 @@ Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <outpu
 		-file containing the list of markers, one on each line
 		-file containing lines of phenotype data:
 			-format: Mouse ID,id,Sex,<phenotype 1>,...,<phenotype 2>
+			-accepted scientific notation formats:
+				-e.g. 1.23E3, 1.23E+3, 1.23E-3,
+					1.23e3, 1.23e+3, 1.23e-3
+					also, 12.3E3 is accepted, even though it's not proper
+				-only digits, decimal points, and scientific notation symbols
+				(e.g. E,+,-) are allowed
+				(e.g. none of the following symbols are allowed: #%$(){}[]*=)
+				-additionally, no whitespace (i.e. spaces or tabs)
+				can exist within the value (e.g. 1.23 e4 is not legal)
 	Output:
 		<main_geno_filename_prefix><geno_filename_suffix>
 			e.g. "main_geno_csvsr.csv"
@@ -58,9 +67,8 @@ sex_label_as_numeric = {female:0,male:1}		# maps sex labels to numeric indicator
 class Rounded_value(Enum):
 	'''Adjusted by user in "Parameters set up user" section,
 	used by Individual_averaged.average()'''
-	min = 'round_min'
+	# min = 'round_min'
 	max = 'round_max'
-	fixed = 'round_fixed'
 
 	def num_significant_digits(value):
 		'''Counts number of significant figures in a numeric string.'''
@@ -71,7 +79,7 @@ class Rounded_value(Enum):
 	def get_significant_digits(value):
 		'''Remove non digits, undesired zeroes, scientific notation characters,
 		but leave the decimal point.
-			e.g. -034.5E+3 -> 34.5    or   0.004 -> .4'''
+			e.g. -034.5E+3 -> 34.5    and   0.004 -> .4'''
 		parsed_value = Rounded_value.remove_non_digits(value)
 		parsed_value = Rounded_value.remove_leading_zeroes(parsed_value)
 		parsed_value = Rounded_value.remove_decimal_placeholding_zeroes(parsed_value)
@@ -81,25 +89,59 @@ class Rounded_value(Enum):
 		return( re.sub(r'\.', r'', value) )
 
 	def remove_non_digits(value):
-		'''Remove scientific notation characters and negation sign
+		'''Remove scientific notation characters and the following symbol(s): -
 			-03.05E+4 -> 03.05'''
-		return( re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value) )
+		regex = r'''
+			^					# START from beginning of string
+			-?					# remove any negation
+			((\d+\.?\d*)		# keep digits
+			| (\d*\.\d+))		# (which may or may not be significant)
+			.*					# remove any characters after the last digit
+			$'''				# STOP at end of sting
+		return( re.sub(regex, r'\1', value, flags=re.VERBOSE) )
 
 	def remove_leading_zeroes(value):
-		'''Remove leading zeroes to left of decimal point, keeping at most 1 zero
-		e.g. -03.05E+4 -> 305E+4    or    05 -> 5    or   0.4 -> .4    or   00 -> 0'''
-		return( re.sub(r'^0*(\d\.?\d*)$', r'\1', value) )
+		'''Remove leading zeroes only to left of decimal point
+		e.g. -03.05E+4 -> 305E+4    and    05 -> 5    and   0.4 -> .4
+		and   00 -> 0   and   0.0 -> .0   but   0. -> 0.'''
+		regex = r'''
+			^					# START from beginning of string
+			(-?)				# keep negation
+			0*					# reomve as many integral zeroes as possible
+			(0					# keep 1 zero if value is a pure integral zero
+			| ([1-9]\.?\d*.*)	# OR keep everything beginning with first non-zero integers
+		 	| (\.\d+.*))		# OR keep decimal values
+			$'''				# STOP at end of sting
+		return( re.sub(regex, r'\1\2', value, flags=re.VERBOSE) )
 
 	def remove_decimal_placeholding_zeroes(value):
-		'''Remove leading zeroes to right of decimal point, plus any immediately to
-		the left of decimal point, if value < 1
-		e.g. .05 -> .5    or   0.01 -> .1   but  0.0 -> .0'''
-		return( re.sub(r'^0*(\.)0*(\d+)$', r'\1\2', value) )
+		'''If value < |1|, remove leading zeroes to left of decimal point,
+		plus any zeroes immediately to the right of decimal point that serve
+		only as placeholders
+		e.g. .05 -> .5    and   0.01 -> .1   and  0.0 -> .0   and  .02E4 -> .2E4'''
+		regex = r'''
+			^					# START from beginning of string
+			(-?)				# keep negation
+			0*					# remove any zeroes to left of decimal point
+			(\.)				# keep decimal point
+			0*					# remove zeroes immediately to right of decimal point
+			(\d+				# keeping at least 1 digit, keep at most 1 zero
+			.*)					# keep non-digit characters
+			$'''				# STOP at end of sting
+		return( re.sub(regex, r'\1\2\3', value, flags=re.VERBOSE) )
 
 	def remove_integral_placeholding_zeroes(value):
-		'''Remove trailing zeroes to right of integer w/ no decimal point
-		e.g. 100 -> 1   but   100. -> 100.'''
-		return( re.sub(r'^([1-9]+)0*$', r'\1', value) )
+		'''If value has no decimal point and/or value is not given in
+		(quasi) scientific notation, remove trailing zeroes to right of integer
+		e.g. 100 -> 1
+		but   100. -> 100.   and   2.20E3 -> 2.20E3   and   220E3 -> 220E3'''
+		regex = r'''
+			^					# START from beginning of string
+			(-?)				# keep negation
+			([1-9]+)			# keep non-zero digits
+			0*					# remove placeholding zeroes
+			$'''				# STOP at end of sting
+		return( re.sub(regex, r'\1\2', value, flags=re.VERBOSE) )
 
 #######################################################
 ##   Parameters set by user (change as desired/needed):
