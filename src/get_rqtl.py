@@ -28,7 +28,7 @@ Notes:
 	-get_genotypes() is dependent on results from get_phenotypes() so that
 	the order of rows in the final files match up
 
-Knwon issues:
+Known issues:
 	-cannot split up genotype file into one file per chromosome due to bug
 
 Future ideas:
@@ -38,14 +38,22 @@ Future ideas:
 	the massive WHERE clause which currently has thousands of conditions per query
 	-May be able to simplifiy script using Pandas Scientific Computing library
 	-Script can be vastly simplified if phenotype data stored in database
+	-Re-implement completely:
+		-If all phenotype and genotype data are in a database, create a view
+		and just pull from that.
+		-PRO(s): The benefit is that this script wouldn't need to provide functionality
+		already implemented by the database engine (significantly, pivot function).
+		-CON(s): This forces the user to first import all data to database
+		(which will force user to clean up their data and titles first).
 '''
 import pyodbc
 import os
 import sys
 import time				# for script-duration stats presented to user
 import string
-from decimal import *	# for fixed-point representation
-from math import *		# for rounding
+# for fixed-point representation:
+from decimal import (Decimal, Context, InvalidOperation, ROUND_HALF_EVEN,
+	getcontext, setcontext)
 import re				# for determining true count of significant digits
 						# in a numeric string
 from enum import Enum
@@ -53,20 +61,20 @@ from enum import Enum
 #######################################################
 ##   Global fields (do not change):
 #######################################################
-make_chromosome_files = False	# Has bug where headings written but no genotyeps
-chromosomes = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','x']
+MAKE_CHROMOSOME_FILES = False	# Has bug where headings written but no genotyeps
+CHROMOSOMES = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','x']
 
 output_dir = None
-first_strain_column_index = 3	# see note on inputs in script description
-rqtl_id_label = 'id'			# column label expected by R/QTL column with iids
-rqtl_sex_label = 'sex'			# column label expected by R/QTL column with sexes
-empty_string = ''
-query_batch_size = 2000			# more than 2000 makes genotypes query too complex
-max_buffer_size = 50000			# number rows to write to file at a time
-female = 'female'
-male = 'male'
-hetero = 'hetero'
-sex_label_as_numeric = {female:0,male:1}		# maps sex labels to numeric indicator
+FIRST_STRAIN_COLUMN_INDEX = 3	# see note on inputs in script description
+RQTL_ID_LABEL = 'id'			# column label expected by R/QTL column with iids
+RQTL_SEX_LABEL = 'sex'			# column label expected by R/QTL column with sexes
+EMPTY_STRING = ''
+QUERY_BATCH_SIZE = 2000			# more than 2000 makes genotypes query too complex
+MAX_BUFFER_SIZE = 50000			# number rows to write to file at a time
+FEMALE = 'female'
+MALE = 'male'
+HETERO = 'hetero'
+SEX_LABEL_AS_NUMERIC = {FEMALE:0,MALE:1}		# maps sex labels to numeric indicator
 
 class Rounded_value(Enum):
 	'''Adjusted by user in "Parameters set up user" section,
@@ -163,7 +171,7 @@ marker_base_pair_position = 'snp_bp_mm10'	# used to estimate centimorgans
 marker_quality_condition = " WHERE flagged = 0 and quality = 'good'"
 
 # template-components for names of output files:
-pheno_filename_prefixes = {female:'female',male:'male',hetero:'hetero'}	# change quoted parts only
+pheno_filename_prefixes = {FEMALE:'female',MALE:'male',HETERO:'hetero'}	# change quoted parts only
 pheno_filename_suffix = 'csvsr_pheno.csv'
 main_geno_filename_prefix = 'main'
 geno_filename_suffix = 'csvsr_geno.csv'
@@ -230,10 +238,10 @@ class Geno_file_builder(File_builder):
 		# 	in each strain. Therefore, genotype data is often duplicated
 		if Geno_file_builder.formatted_row is None:
 			new_row = []
-			for index, marker_info in enumerate(Geno_file_builder.column_labels_by_strain[ :first_strain_column_index]):
+			for index, marker_info in enumerate(Geno_file_builder.column_labels_by_strain[ :FIRST_STRAIN_COLUMN_INDEX]):
 				new_row.append(row[index])
-			for index, strain in enumerate(Geno_file_builder.column_labels_by_strain[first_strain_column_index: ]):
-				genotype = row[first_strain_column_index + index]
+			for index, strain in enumerate(Geno_file_builder.column_labels_by_strain[FIRST_STRAIN_COLUMN_INDEX: ]):
+				genotype = row[FIRST_STRAIN_COLUMN_INDEX + index]
 				individuals = self.data_by_strain.strains[strain]	# list of individual ids for that strain
 				for individual in individuals:
 					new_row.append(genotype)
@@ -247,17 +255,17 @@ class Geno_file_builder(File_builder):
 		'''
 
 		# column labels for use by append()
-		Geno_file_builder.column_labels_by_strain = column_labels[ :first_strain_column_index]
+		Geno_file_builder.column_labels_by_strain = column_labels[ :FIRST_STRAIN_COLUMN_INDEX]
 
 		# Intent is that column-names are formatted once and re-used for any
 			# chromosome files that are to be made
 		if Geno_file_builder.column_labels_by_iid is None:
 			new_column_labels = []
-			for name in column_labels[ :first_strain_column_index]:
-				name = name.replace(marker_chromosome, empty_string)
-				name = name.replace(centiMorgans, empty_string)
+			for name in column_labels[ :FIRST_STRAIN_COLUMN_INDEX]:
+				name = name.replace(marker_chromosome, EMPTY_STRING)
+				name = name.replace(centiMorgans, EMPTY_STRING)
 				new_column_labels.append(name)
-			for strain in column_labels[first_strain_column_index: ]:
+			for strain in column_labels[FIRST_STRAIN_COLUMN_INDEX: ]:
 				# save order of strain column labels for use in append()
 				Geno_file_builder.column_labels_by_strain.append(strain)
 				individuals = self.data_by_strain.strains[strain]	# list of individual ids for that strain
@@ -289,9 +297,9 @@ class Pheno_file_builder(File_builder):
 
 	def do_sexes_match(self, individual):
 		'''Check to see if an individual belongs in this pheno file'''
-		both_female = self.sex == female and individual.is_female()
-		both_male = self.sex == male and individual.is_male()
-		both_sexes = self.sex == hetero		# anything goes
+		both_female = self.sex == FEMALE and individual.is_female()
+		both_male = self.sex == MALE and individual.is_male()
+		both_sexes = self.sex == HETERO		# anything goes
 		return( both_female or both_male or both_sexes )
 
 
@@ -302,12 +310,12 @@ class Individual(object):
 	first_phenotype_column_index = 3
 	row_names = None
 	missing_value = '-'
-	special_rows = [rqtl_sex_label, rqtl_id_label]
+	special_rows = [RQTL_SEX_LABEL, RQTL_ID_LABEL]
 
 	def __init__(self, line):
 		self.iid = sanitize(line[Individual.iid_column_index])
 		self.strain = line[Individual.strain_column_index]
-		self.sex = sex_label_as_numeric[line[Individual.sex_column_index].lower()]
+		self.sex = SEX_LABEL_AS_NUMERIC[line[Individual.sex_column_index].lower()]
 		self.rows = []
 
 	def add(self, line):
@@ -317,10 +325,10 @@ class Individual(object):
 		self.rows.append(self.iid)
 
 	def is_female(self):
-		return( self.sex == sex_label_as_numeric[female] )
+		return( self.sex == SEX_LABEL_AS_NUMERIC[FEMALE] )
 
 	def is_male(self):
-		return( self.sex == sex_label_as_numeric[male] )
+		return( self.sex == SEX_LABEL_AS_NUMERIC[MALE] )
 
 	def replace_missing_value(value):
 		'''
@@ -339,12 +347,12 @@ class Individual_averaged(Individual):
 	'''
 	def __init__(self, line, sex_label):
 		self.strain = line[Individual.strain_column_index]
-		self.sex = sex_label_as_numeric[sex_label.lower()]
+		self.sex = SEX_LABEL_AS_NUMERIC[sex_label.lower()]
 		# Differentiate male and female column labels for each strain
 		iid = [sanitize(self.strain)]
-		if sex_label == female:
+		if sex_label == FEMALE:
 			iid.append('f')
-		elif sex_label == male:
+		elif sex_label == MALE:
 			iid.append('m')
 		self.iid = '.'.join(iid)
 		# all lines are phenotypes except sex and iid
@@ -426,12 +434,12 @@ class Strains(object):
 		and get_genotypes().
 		'''
 		strain = line[Individual_averaged.strain_column_index]
-		sex = sex_label_as_numeric[ line[Individual_averaged.sex_column_index].lower() ]
+		sex = SEX_LABEL_AS_NUMERIC[ line[Individual_averaged.sex_column_index].lower() ]
 		if strain not in self.strains:
 			# create list w/ 2 elements and index into it using numeric indicators of sex
 			sexes = []
-			sexes.append(Individual_averaged(line, female))
-			sexes.append(Individual_averaged(line, male))
+			sexes.append(Individual_averaged(line, FEMALE))
+			sexes.append(Individual_averaged(line, MALE))
 			self.strains[strain] = sexes
 			self.ordered_strains.append(strain)
 		self.strains[strain][sex].add(line)	# add line of data to Individual_averaged object
@@ -439,6 +447,7 @@ class Strains(object):
 	def append_not_averaged_by_strain(self, line):
 		'''
 		Creates an individual with the given line of phenotype data.
+
 		Adds new strain to an ordered list which is used in get_phenotypes()
 		and get_genotypes().
 		'''
@@ -457,11 +466,6 @@ def is_numeric(string):
 		return(True)
 	except InvalidOperation:
 		return(False)
-
-def remove_non_digits(value):
-	'''Remove scientific notation characters and negation sign
-		-03.05E+4 -> 03.05'''
-	return( re.sub(r'^-*((\d+\.?\d*)|(\d*\.\d+)).*$', r'\1', value) )
 
 def sanitize(dirty_string):
 	'''Remove undesirable characters from a string'''
@@ -514,7 +518,7 @@ def sort_markers( markers_raw, connection ):
 	# build list of ordered markers
 	markers_ordered = []
 	for row in ordering:
-		marker = empty_string.join(map(str,row))
+		marker = EMPTY_STRING.join(map(str,row))
 		# filter sorted markers to just the ones specified in markers input file
 		if marker in markers_raw:
 			markers_ordered.append(marker)
@@ -544,10 +548,10 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 
 	filenames = [main_geno_filename_prefix]
 	# open files for writing
-	if make_chromosome_files:
-		filenames = filenames + chromosomes
+	if MAKE_CHROMOSOME_FILES:
+		filenames = filenames + CHROMOSOMES
 
-	# for main geno file and (if make_chromosome_files = True) also chromosome files
+	# for main geno file and (if MAKE_CHROMOSOME_FILES = True) also chromosome files
 	for filename in filenames:
 		files[filename] = Geno_file_builder(filename, geno_fn_template, data_by_strain)
 		files[filename].open()
@@ -572,7 +576,7 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 	linebuffer = []
 	while next_row_to_get < num_markers :
 		# used to select subset of markers to get in this query
-		max_rows_to_get = next_row_to_get + query_batch_size
+		max_rows_to_get = next_row_to_get + QUERY_BATCH_SIZE
 		if max_rows_to_get > num_markers:
 			max_rows_to_get = num_markers
 
@@ -604,7 +608,7 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 			geno_file_builders_to_alter = [ files[main_geno_filename_prefix] ]
 
 			chromosome = None
-			if make_chromosome_files == True:
+			if MAKE_CHROMOSOME_FILES == True:
 				# each marker's chromosome name is in column 1 of each row
 				chromosome = files[row[1].lower()]
 				geno_file_builders_to_alter.append(chromosome)
@@ -613,12 +617,12 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 			Geno_file_builder.formatted_row = None
 			for geno_file_builder in geno_file_builders_to_alter:
 				geno_file_builder.append(row)
-				if len(geno_file_builder.linebuffer) == max_buffer_size:
+				if len(geno_file_builder.linebuffer) == MAX_BUFFER_SIZE:
 					geno_file_builder.write_linebuffer()
 
 		# write remaining lines if buffers full or query-processing is done
 		for geno_file_builder in files.values():
-			if max_rows_to_get == num_markers or len(geno_file_builder.linebuffer) == max_buffer_size:
+			if max_rows_to_get == num_markers or len(geno_file_builder.linebuffer) == MAX_BUFFER_SIZE:
 				geno_file_builder.write_linebuffer()
 
 		next_row_to_get = max_rows_to_get
@@ -633,7 +637,7 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 	'''Main function for building phenotype files'''
 	Individual.row_names = (sanitize_list(lines[0][Individual.first_phenotype_column_index: ] +
-						[rqtl_sex_label] + [rqtl_id_label]) )
+						[RQTL_SEX_LABEL] + [RQTL_ID_LABEL]) )
 
 	# determines if data will be read in and grouped by strain or kept separated by individual
 	data_by_strain = Strains(use_average_by_strain)
@@ -644,7 +648,7 @@ def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 	# open files for writing:
 	phenotype_list_builder = Pheno_file_builder('phenotypes', 'list.txt')
 	phenotype_list_builder.open()	# file w/ just the list of sanitized phenotypes
-	sexes = [female, male, hetero]
+	sexes = [FEMALE, MALE, HETERO]
 	pheno_file_builders = []
 	for sex in sexes:
 		pheno_file_builder = Pheno_file_builder(sex, pheno_fn_template)
@@ -732,7 +736,7 @@ if __name__ == '__main__':
 		# Convert marker lines to strings, store in dictionary for fast lookup:
 		markers = {}
 		for line in geno_lines:
-			markers[empty_string.join(line)] = None
+			markers[EMPTY_STRING.join(line)] = None
 
 		t0 = time.clock()	# see how long query took
 		# Build genotype file(s)
