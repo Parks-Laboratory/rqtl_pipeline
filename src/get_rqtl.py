@@ -316,15 +316,9 @@ class Individual_averaged(Individual):
 		if num_phenotype_values == 1 and phenotype_values[0] == Individual_averaged.missing_value:
 			return( Individual_averaged.missing_value )
 
-		# context set globally for all Decimal arithmetic, not just for this instance of method
-		setcontext( Context( prec=None, rounding=None ) )
-		# used in calculation of average and when rounding_method is round.max
-		sum_phenotype_values = Decimal('0')
-		for phenotype_value in phenotype_values:
-			sum_phenotype_values += Decimal(phenotype_value)
-
 		# calculate average
-		average = sum_phenotype_values / len(phenotype_values)
+		sum_phenotype_values = Significant_value.sum(phenotype_values)
+		average = sum_phenotype_values / num_phenotype_values
 		average_rounded = Significant_value.round(sum_phenotype_values, average, rounding_method)
 
 		return( str(average_rounded) )
@@ -334,7 +328,9 @@ class Strains(object):
 	'''For each strain, stores phenotype data for individual (either averaged or not)'''
 
 	def __init__(self, average_by_strain):
-		'''average_by_strain: True or False'''
+		'''Create Strain object
+		Arguments:
+		average_by_strain -- True or False'''
 		self.average_by_strain = average_by_strain
 		self.strains = {}
 		self.ordered_strains = []
@@ -423,6 +419,10 @@ def sanitize(dirty_string):
 
 
 class Significant_value():
+	'''Set of functions for working with significant figures in numeric strings
+
+	 Has functions for counting sigfigs, and adding and rounding values'''
+
 	def round(sum, average, rounding_method):
 		# access global var. rounding_method set by user
 		average_rounded = average
@@ -431,6 +431,22 @@ class Significant_value():
 			setcontext(Context(prec=num_sigfigs, rounding=ROUND_HALF_EVEN))
 			average_rounded = +average
 		return(average_rounded)
+
+	def sum(values):
+		'''
+		Sums up list of strings
+
+		Arguments:
+		values -- list of strings
+		'''
+
+		# context set globally for all Decimal arithmetic, not just for this instance of method
+		setcontext( Context( prec=None, rounding=None ) )
+		# used in calculation of average and when rounding_method is round.max
+		sum = Decimal('0')
+		for value in values:
+			sum += Decimal(value)
+		return(sum)
 
 	def num_significant_digits(value):
 		'''Counts number of significant figures in a numeric string.'''
@@ -689,7 +705,7 @@ def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 					if ( write_row_value ):
 						if use_average_by_strain and row_name not in Individual_averaged.special_rows:
 							# pass list of not-yet-averaged phenotype values
-							pheno_file_builder.row.append(individual.average(row_value))
+							pheno_file_builder.row.append(Individual_averaged.average(row_value))
 						else:
 							pheno_file_builder.row.append(row_value)
 					else:
