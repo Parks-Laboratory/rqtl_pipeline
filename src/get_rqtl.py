@@ -308,6 +308,9 @@ class Individual_averaged(Individual):
 
 	def average(phenotype_values):
 		'''
+		Input: list of numeric strings
+		Output: mean of those strings, as a string
+
 		Returns average of a list of phenotype values. The parameter is used to
 		simplify the process of specifying which
 		'''
@@ -419,22 +422,37 @@ def sanitize(dirty_string):
 
 
 class Significant_value():
-	'''Set of functions for working with significant figures in numeric strings
+	'''
+	Set of functions for working with significant figures in numeric strings
 
-	 Has functions for counting sigfigs, and adding and rounding values'''
+	 Has functions for counting sigfigs, and adding and rounding values
+	 '''
 
 	def round(sum, average, rounding_method):
+		'''
+		Return average that has been rounded
+
+		Use sum and rounding_method to determine appropriate level of precision.
+
+
+		Arguments:
+		sum -- Decimal value
+		average -- Decimal value
+		rounding_method -- one of Rounding_method values
+		'''
 		# access global var. rounding_method set by user
 		average_rounded = average
 		if Rounding_method.max is rounding_method:
 			num_sigfigs = Significant_value.num_significant_digits(str(sum))
 			setcontext(Context(prec=num_sigfigs, rounding=ROUND_HALF_EVEN))
+			print('average',average)
 			average_rounded = +average
+			print('average_rounded', average_rounded)
 		return(average_rounded)
 
 	def sum(values):
 		'''
-		Sums up list of strings
+		Sum up list of numeric strings. Return Decimal value.
 
 		Arguments:
 		values -- list of strings
@@ -449,7 +467,9 @@ class Significant_value():
 		return(sum)
 
 	def num_significant_digits(value):
-		'''Counts number of significant figures in a numeric string.'''
+		'''
+		Counts number of significant figures in a numeric string.
+		'''
 		parsed_value = Significant_value.get_significant_digits(value)
 		parsed_value = Significant_value.remove_decimal_point(parsed_value)
 		return( len( parsed_value ) )

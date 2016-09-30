@@ -20,8 +20,8 @@ class test_Significant_value_max(unittest.TestCase):
 
 	def test_round(self):
 		self.assertRoundingEqual('1','1','1')
-		self.assertRoundingEqual('10.10','5.05','5.050')
 		self.assertRoundingEqual('10.10','5.050','5.050')
+		self.assertRoundingEqual('10.10','5.05','5.050')
 
 	def test_sum(self):
 		self.assertSumEqual(['1','2','3'], '6')
