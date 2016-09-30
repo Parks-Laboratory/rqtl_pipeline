@@ -7,9 +7,16 @@ class test_Significant_value_max(unittest.TestCase):
 			Significant_value.round(Decimal(sum), Decimal(average), rounding_method)
 			, Decimal(correctly_rounded_value) )
 
+	def assertSumEqual(self, values, correct_sum):
+		self.assertEqual(str(Significant_value.sum(values)), correct_sum)
+
 	def test_round(self):
 		self.assertRoundingEqual('1','1','1')
 		self.assertRoundingEqual('10.10','5.05','5.050')
+
+	def test_sum(self):
+		self.assertSumEqual(['1','2','3'], '6')
+		self.assertSumEqual(['3.55', '6.55'], '10.10')
 
 	def test_num_significant_digits(self):
 		'''Count integral placeholding zeroes as significant'''
