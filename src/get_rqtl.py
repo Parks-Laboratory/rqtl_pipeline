@@ -306,7 +306,7 @@ class Individual_averaged(Individual):
 					self.rows[phenotype_index] = []
 				self.rows[phenotype_index].append(phenotype_value)
 
-	def average(self, phenotype_values):
+	def average(phenotype_values):
 		'''
 		Returns average of a list of phenotype values. The parameter is used to
 		simplify the process of specifying which
@@ -423,11 +423,11 @@ def sanitize(dirty_string):
 
 
 class Significant_value():
-	def round(sum_phenotype_values, average, rounding_method):
+	def round(sum, average, rounding_method):
 		# access global var. rounding_method set by user
 		average_rounded = average
 		if Rounding_method.max is rounding_method:
-			num_sigfigs = Significant_value.num_significant_digits(str(sum_phenotype_values))
+			num_sigfigs = Significant_value.num_significant_digits(str(sum))
 			setcontext(Context(prec=num_sigfigs, rounding=ROUND_HALF_EVEN))
 			average_rounded = +average
 		return(average_rounded)
