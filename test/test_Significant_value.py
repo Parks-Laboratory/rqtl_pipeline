@@ -2,10 +2,18 @@ from src.get_rqtl import *
 import unittest
 
 class test_Significant_value_max(unittest.TestCase):
+	'''Test implementation of Significant_value class
+
+	In particular tests implementation where rounding_method == Rounding_method.max'''
+
 	def assertRoundingEqual(self, sum, average, correctly_rounded_value):
+		'''Wrapper function to test Significant_value.round()
+
+		Compare string value of rounded value with correctly_rounded_value
+		Accesses rounding_method from user-set global variable in get_rqtl.py'''
 		self.assertEqual(
-			Significant_value.round(Decimal(sum), Decimal(average), rounding_method)
-			, Decimal(correctly_rounded_value) )
+			str(Significant_value.round(Decimal(sum), Decimal(average), rounding_method))
+			, correctly_rounded_value )
 
 	def assertSumEqual(self, values, correct_sum):
 		self.assertEqual(str(Significant_value.sum(values)), correct_sum)
@@ -13,6 +21,7 @@ class test_Significant_value_max(unittest.TestCase):
 	def test_round(self):
 		self.assertRoundingEqual('1','1','1')
 		self.assertRoundingEqual('10.10','5.05','5.050')
+		self.assertRoundingEqual('10.10','5.050','5.050')
 
 	def test_sum(self):
 		self.assertSumEqual(['1','2','3'], '6')
