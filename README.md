@@ -1,5 +1,8 @@
 # rqtl_pipeline
 
+Development (in progress):
+-currently working in branch "fix_sigfig_implementation"
+
 Requirements:
 -Python 3.? installed
 -Files needed in same directory as get_rqtl.py:
