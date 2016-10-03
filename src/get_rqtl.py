@@ -434,6 +434,9 @@ class Significant_value():
 
 		Use sum and rounding_method to determine appropriate level of precision.
 
+		If the number of sigfigs of of sum is GREATER THAN the sigfigs that
+		average has, don't change anything. R/QTL will pad average value with
+		zeroes if necessary so that all values in a column have same precision.
 
 		Arguments:
 		sum -- Decimal value
