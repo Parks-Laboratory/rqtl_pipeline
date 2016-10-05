@@ -438,19 +438,32 @@ class Significant_value():
 		average has, don't change anything. R/QTL will pad average value with
 		zeroes if necessary so that all values in a column have same precision.
 
+		Using rounding=ROUND_HALF_EVEN:
+			Given value xy..., suppose x is a significant digit and y and z are not
+			significant.
+				ROUND_HALF_EVEN rounds x down
+					if y ∈ {0,1,2,3,4}
+					else if y == 5
+						and x is an even digit (i.e. x ∈ {0,2,4,6,8})
+						and all digits after y are 0 or not present at all
+				ROUND_HALF_EVEN rounds x up
+					if y ∈ {6,7,8,9}
+					else if y == 5
+						and ( x is an odd digit (i.e. x ∈ {1,3,5,7,9})
+						or there exists at least one non-zero digit after y )
+
+
 		Arguments:
 		sum -- Decimal value
 		average -- Decimal value
 		rounding_method -- one of Rounding_method values
 		'''
 		# access global var. rounding_method set by user
-		average_rounded = average
+		average_rounded = average  # default is to do no rounding
 		if Rounding_method.max is rounding_method:
 			num_sigfigs = Significant_value.num_significant_digits(str(sum))
 			setcontext(Context(prec=num_sigfigs, rounding=ROUND_HALF_EVEN))
-			print('average',average)
 			average_rounded = +average
-			print('average_rounded', average_rounded)
 		return(average_rounded)
 
 	def sum(values):
