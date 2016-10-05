@@ -27,7 +27,8 @@ class test_add(unittest.TestCase):
 
 class test_average_round_max(unittest.TestCase):
 	'''Test that avearges are rounded to the number of significant digits
-	specified by Rounding_method.max'''
+	specified by Rounding_method.max
+	(i.e. keep as many sigfigs in average as existed in sum)'''
 	def assertAvgEqual(self, values_to_average, true_avg):
 		self.assertEqual(Individual_averaged.average(values_to_average), true_avg)
 
