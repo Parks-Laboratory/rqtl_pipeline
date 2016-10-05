@@ -11,17 +11,31 @@ class test_Significant_value_max(unittest.TestCase):
 
 		Compare string value of rounded value with correctly_rounded_value
 		Accesses rounding_method from user-set global variable in get_rqtl.py'''
+		rounding_method = Rounding_method.max
 		self.assertEqual(
 			str(Significant_value.round(Decimal(sum), Decimal(average), rounding_method))
-			, correctly_rounded_value )
+			,correctly_rounded_value )
 
 	def assertSumEqual(self, values, correct_sum):
 		self.assertEqual(str(Significant_value.sum(values)), correct_sum)
 
-	def test_round(self):
-		self.assertRoundingEqual('1','1','1')
+	def test_round_fixed_point(self):
+		# no rounding required, sigfigs of sum >= sigfigs of average
 		self.assertRoundingEqual('10.10','5.050','5.050')
-		self.assertRoundingEqual('10.10','5.05','5.050')
+		self.assertRoundingEqual('10.10','5.05','5.05')
+		self.assertRoundingEqual('-10.10','-5.05','-5.05')
+		self.assertRoundingEqual('1','1','1')
+		self.assertRoundingEqual('5.555E+5','9.999E+3','9999')
+		self.assertRoundingEqual('5E+5','1E+4','1E+4')
+		self.assertRoundingEqual('0','0','0')
+
+		# round up
+		self.assertRoundingEqual('12571','345.637','345.64')
+
+		# round down
+		self.assertRoundingEqual('1257','3456.37','3456')
+		self.assertRoundingEqual('1257','34.5637','34.56')
+		self.assertRoundingEqual('1257','34.560','34.56')
 
 	def test_sum(self):
 		self.assertSumEqual(['1','2','3'], '6')
