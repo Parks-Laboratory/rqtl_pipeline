@@ -438,7 +438,8 @@ class Significant_value():
 		average has, don't change anything. R/QTL will pad average value with
 		zeroes if necessary so that all values in a column have same precision.
 
-		Using rounding=ROUND_HALF_EVEN:
+		Using Rounding_method.MAX results in using the rounding rules of
+		python's decimal.ROUND_HALF_EVEN:
 			Given value xy..., suppose x is a significant digit and y and z are not
 			significant.
 				ROUND_HALF_EVEN rounds x down
@@ -452,6 +453,9 @@ class Significant_value():
 						and ( x is an odd digit (i.e. x ∈ {1,3,5,7,9})
 						or there exists at least one non-zero digit after y )
 
+		Therefore, for Rounding_method.MAX, the values will be biased towards
+		being too high. However, since this MAX keeps more digits than significant
+		anyway, it is unlikely for the true value to be affected significantly.
 
 		Arguments:
 		sum -- Decimal value
