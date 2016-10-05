@@ -31,6 +31,7 @@ class test_Significant_value_max(unittest.TestCase):
 
 		# round up
 		self.assertRoundingEqual('12571','345.637','345.64')
+		self.assertRoundingEqual('-1.25E-3','-.0063716515','-0.00637')
 
 		# round down
 		self.assertRoundingEqual('1257','3456.37','3456')
