@@ -1,4 +1,4 @@
-from src.get_rqtl import *
+from src.makeRQTLInputs import *
 import unittest
 
 class test__init__(unittest.TestCase):
