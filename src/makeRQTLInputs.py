@@ -5,7 +5,7 @@ Retrieves Mouse Diversity Array genotypes from database in R/QTL format
 Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <output dir.>
 	Inputs:
 		-file containing the list of markers, one on each line
-		-file containing lines of phenotype data:
+		-csv file containing lines of phenotype data:
 			-format: Mouse ID,id,Sex,<phenotype 1>,...,<phenotype 2>
 			-accepted scientific notation formats:
 				-e.g. 1.23E3, 1.23E+3, 1.23E-3,
@@ -25,7 +25,7 @@ Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <outpu
 		<hetero pheno_sexes_filename_prefix><pheno_filename_suffix>
 
 Notes:
-	-get_genotypes() is dependent on results from get_phenotypes() so that
+	-make_genotype_files() is dependent on results from make_phenotype_files() so that
 	the order of rows in the final files match up
 
 Known issues:
@@ -34,7 +34,7 @@ Known issues:
 Future ideas:
 	-Use argparse library to parse command-line arguments
 	-Create temporary table in databse w/ all the markers, using the marker
-	as primary key. Later, use this table in get_genotypes() query instead of
+	as primary key. Later, use this table in make_genotype_files() query instead of
 	the massive WHERE clause which currently has thousands of conditions per query
 	-May be able to simplifiy script using Pandas Scientific Computing library
 	-Script can be vastly simplified if phenotype data stored in database
@@ -354,8 +354,8 @@ class Strains(object):
 		all values in male list get averaged and all values in female list get
 		averaged.
 
-		Adds new strain to an ordered list which is used in get_phenotypes()
-		and get_genotypes().
+		Adds new strain to an ordered list which is used in make_phenotype_files()
+		and make_genotype_files().
 		'''
 		strain = line[Individual_averaged.strain_column_index]
 		sex = SEX_LABEL_AS_NUMERIC[ line[Individual_averaged.sex_column_index].lower() ]
@@ -372,13 +372,13 @@ class Strains(object):
 		'''
 		Creates an individual with the given line of phenotype data.
 
-		Adds new strain to an ordered list which is used in get_phenotypes()
-		and get_genotypes().
+		Adds new strain to an ordered list which is used in make_phenotype_files()
+		and make_genotype_files().
 		'''
 		strain = line[Individual.strain_column_index]
 		if strain not in self.strains:
 			self.strains[strain] = []
-			# set order of strains for use by get_phenotypes() and get_genotypes()
+			# set order of strains for use by make_phenotype_files() and make_genotype_files()
 			self.ordered_strains.append(strain)
 		individual = Individual(line)
 		individual.add(line)	# add line of data to Individual object
@@ -435,8 +435,8 @@ class Significant_value():
 		Use sum and rounding_method to determine appropriate level of precision.
 
 		If the number of sigfigs of of sum is GREATER THAN the sigfigs that
-		average has, don't change anything. R/QTL will pad average value with
-		zeroes if necessary so that all values in a column have same precision.
+		average has, do nothing. R/QTL will pad average value with
+		zeroes so that all values in a column have same precision.
 
 		Using Rounding_method.MAX results in using the rounding rules of
 		python's decimal.ROUND_HALF_EVEN:
@@ -604,7 +604,7 @@ def rqtl_format(list):
 	return(new_list)
 
 
-def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
+def make_genotype_files( data_by_strain, markers_raw, geno_fn_template ):
 	'''Main function for building genotype file(s)'''
 	num_markers = len(markers_raw)
 
@@ -699,7 +699,7 @@ def get_genotypes( data_by_strain, markers_raw, geno_fn_template ):
 	connection.close()
 
 
-def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
+def make_phenotype_files( lines, pheno_fn_template, use_average_by_strain ):
 	'''Main function for building phenotype files'''
 	Individual.row_names = (sanitize_list(lines[0][Individual.first_phenotype_column_index: ] +
 						[RQTL_SEX_LABEL] + [RQTL_ID_LABEL]) )
@@ -708,7 +708,7 @@ def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 	data_by_strain = Strains(use_average_by_strain)
 	# store iid, sex, strain, and phenotype values for each strain in its own object
 	for line in lines[1: ]:
-		data_by_strain.append(line)	# also for expanding strain in get_genotypes()
+		data_by_strain.append(line)	# also for expanding strain in make_genotype_files()
 
 	# open files for writing:
 	phenotype_list_builder = Pheno_file_builder('phenotypes', 'list.txt')
@@ -733,7 +733,7 @@ def get_phenotypes( lines, pheno_fn_template, use_average_by_strain ):
 			individuals = data_by_strain.strains[strain]
 			for individual_index, individual in enumerate(individuals):
 				for pheno_file_builder in pheno_file_builders:
-					# append row_names prior to appending data for first individual
+					# append row_name prior to appending first individual's data
 					if pheno_file_builder.row == []:
 						pheno_file_builder.row.append(row_name)
 					'''row_value is a single value for non-averaged inidividual
@@ -788,7 +788,7 @@ if __name__ == '__main__':
 		pheno_lines = [line.strip().split(',') for line in pheno_file.readlines()]
 		t0 = time.clock()	# see how long query took
 		# Build phenotype files
-		phenotype_data_by_strain = get_phenotypes( pheno_lines, pheno_filename_suffix, use_average_by_strain )
+		phenotype_data_by_strain = make_phenotype_files( pheno_lines, pheno_filename_suffix, use_average_by_strain )
 		print( 'Pheno files built in %.2f minutes' % ((time.clock()-t0)/60) )
 
 		# Process input for geno file(s):
@@ -805,5 +805,5 @@ if __name__ == '__main__':
 
 		t0 = time.clock()	# see how long query took
 		# Build genotype file(s)
-		get_genotypes( phenotype_data_by_strain, markers, geno_filename_suffix )
+		make_genotype_files( phenotype_data_by_strain, markers, geno_filename_suffix )
 		print( 'Geno file built in %.2f minutes' % ((time.clock()-t0)/60) )
