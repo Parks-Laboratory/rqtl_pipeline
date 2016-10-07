@@ -39,8 +39,20 @@ class test_Significant_value_max(unittest.TestCase):
 		self.assertRoundingEqual('1257','34.560','34.56')
 
 	def test_sum(self):
+		# test integers and decimals
 		self.assertSumEqual(['1','2','3'], '6')
 		self.assertSumEqual(['3.55', '6.55'], '10.10')
+		self.assertSumEqual(['-3.55', '-6.55'], '-10.10')
+		self.assertSumEqual(['.000356546', '.000357554'], '0.000714100')
+		self.assertSumEqual(['-3', '6.55'], '3.55')
+		self.assertSumEqual(['-9', '6'], '-3')
+		self.assertSumEqual(['-.9', '6'], '5.1')
+		self.assertSumEqual(['.4', '.6'], '1.0')
+
+		# test scientific notation
+		self.assertSumEqual(['1e+3','2','3E-1'], '1002.3')
+		self.assertSumEqual(['3.55e+1', '6.55E+2'], '690.5')
+		self.assertSumEqual(['3.56546E-4', '3.57554E-4'], '0.000714100')
 
 	def test_num_significant_digits(self):
 		'''Count integral placeholding zeroes as significant'''
