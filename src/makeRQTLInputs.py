@@ -4,10 +4,19 @@ Retrieves Mouse Diversity Array genotypes from database in R/QTL format
 
 Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <output dir.>
 	Inputs:
-		-file containing the list of markers, one on each line
-		-csv file containing lines of phenotype data:
-			-format: Mouse ID,id,Sex,<phenotype 1>,...,<phenotype 2>
-			-accepted scientific notation formats:
+		1) File containing the list of markers, one on each line
+			File Format:
+				<marker 1>
+				<marker 2>
+				...
+				<marker n>
+		2) CSV containing phenotype data
+			File format:
+				Mouse ID,id,Sex,<phenotype label 1>,...,<phenotype label n>
+				<individual id 1>,<strain id>,<Male/Female>,<phenotype 1>,...,<phenotype m>
+				...
+				<individual id n>,<strain id>,<Male/Female>,<phenotype 1>,...,<phenotype m>
+			Note: Accepted scientific notation formats:
 				-e.g. 1.23E3, 1.23E+3, 1.23E-3,
 					1.23e3, 1.23e+3, 1.23e-3
 					also, 12.3E3 is accepted, even though it's not proper
@@ -16,20 +25,40 @@ Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <outpu
 				(e.g. none of the following symbols are allowed: #%$(){}[]*=)
 				-additionally, no whitespace (i.e. spaces or tabs)
 				can exist within the value (e.g. 1.23 e4 is not legal)
-	Output:
-		<main_geno_filename_prefix><geno_filename_suffix>
-			e.g. "main_geno_csvsr.csv"
-		<female pheno_filename_prefix><pheno_filename_suffix>
-			e.g. "female_pheno_csvsr.csv"
-		<male pheno_filename_prefix><pheno_filename_suffix>
-		<hetero pheno_sexes_filename_prefix><pheno_filename_suffix>
+	Outputs:
+		Genotype file(s):
+			Filename format:
+				<main_geno_filename_prefix><geno_filename_suffix>
+					e.g. "main_geno_csvsr.csv"
+			File format:
+				<RQTL_ID_LABEL>,,,<1st individual's id>,...,<nth individual's id>
+				<marker 1 id>,<chromosome #>,<centimorgans>,<1st individual's allele>,...,<mth individual's allele>
+				...
+				<marker n id>,<chromosome #>,<centimorgans>,<1st individual's allele>,...,<mth individual's allele>
+
+		Phenotype files:
+			Filename format:
+				<female pheno_filename_prefix><pheno_filename_suffix>
+					e.g. "female_pheno_csvsr.csv"
+				<male pheno_filename_prefix><pheno_filename_suffix>
+					e.g. "male_pheno_csvsr.csv"
+				<hetero pheno_sexes_filename_prefix><pheno_filename_suffix>
+					e.g. "hetero_pheno_csvsr.csv"
+			File format:
+				<trait 1>, <value for 1st individual>,...,<value for nth individual>
+				...
+				<trait n>, <1st individual's value>,...,<nth individual's value>
+				<RQTL_SEX_LABEL>,<1st individual's sex>,...,<nth individual's sex>
+				<RQTL_ID_LABEL>,<1st individual's id>,...,<nth individual's id>
 
 Notes:
-	-make_genotype_files() is dependent on results from make_phenotype_files() so that
-	the order of rows in the final files match up
+	-make_genotype_files() is dependent on results from make_phenotype_files().
+	This is due to the contraint that R/QTL requires the columns of both
+	input files to match up (i.e. order of individuals is same in both files)
 
 Known issues:
-	-cannot split up genotype file into one file per chromosome due to bug
+	-Bug in code that split up genotype data so each data for each chromosome
+	is in its own file
 
 Future ideas:
 	-Use argparse library to parse command-line arguments
@@ -68,6 +97,7 @@ output_dir = None
 FIRST_STRAIN_COLUMN_INDEX = 3	# see note on inputs in script description
 RQTL_ID_LABEL = 'id'			# column label expected by R/QTL column with iids
 RQTL_SEX_LABEL = 'sex'			# column label expected by R/QTL column with sexes
+RQTL_MISSING_VALUE_LABEL = '-'
 EMPTY_STRING = ''
 QUERY_BATCH_SIZE = 2000			# more than 2000 makes genotypes query too complex
 MAX_BUFFER_SIZE = 50000			# number rows to write to file at a time
@@ -238,7 +268,6 @@ class Individual(object):
 	sex_column_index = 2
 	first_phenotype_column_index = 3
 	row_names = None
-	missing_value = '-'
 	special_rows = [RQTL_SEX_LABEL, RQTL_ID_LABEL]
 
 	def __init__(self, line):
@@ -265,7 +294,7 @@ class Individual(object):
 		missing-value. Will return missing value for fractions.
 		'''
 		if not is_numeric(value):
-			value = Individual.missing_value
+			value =  RQTL_MISSING_VALUE_LABEL
 		return(value)
 
 
@@ -286,7 +315,7 @@ class Individual_averaged(Individual):
 		self.iid = '.'.join(iid)
 		# all lines are phenotypes except sex and iid
 		num_phenotype_rows = len(line)-Individual_averaged.first_phenotype_column_index
-		self.rows = [Individual_averaged.missing_value]*num_phenotype_rows
+		self.rows = [ RQTL_MISSING_VALUE_LABEL]*num_phenotype_rows
 		self.rows.append(self.sex)
 		self.rows.append(self.iid)
 
@@ -299,10 +328,10 @@ class Individual_averaged(Individual):
 			phenotype_value = Individual_averaged.replace_missing_value(phenotype_value)
 
 			# append value only if it is a number
-			if phenotype_value != Individual_averaged.missing_value:
+			if phenotype_value !=  RQTL_MISSING_VALUE_LABEL:
 				# append value to existing list of values
 				existing_phenotype_value = self.rows[phenotype_index]
-				if(existing_phenotype_value == Individual_averaged.missing_value):
+				if(existing_phenotype_value ==  RQTL_MISSING_VALUE_LABEL):
 					self.rows[phenotype_index] = []
 				self.rows[phenotype_index].append(phenotype_value)
 
@@ -316,8 +345,8 @@ class Individual_averaged(Individual):
 		'''
 		# check if no values to average
 		num_phenotype_values = len(phenotype_values)
-		if num_phenotype_values == 1 and phenotype_values[0] == Individual_averaged.missing_value:
-			return( Individual_averaged.missing_value )
+		if num_phenotype_values == 1 and phenotype_values[0] ==  RQTL_MISSING_VALUE_LABEL:
+			return(  RQTL_MISSING_VALUE_LABEL )
 
 		# calculate average
 		sum_phenotype_values = Significant_value.sum(phenotype_values)
@@ -741,7 +770,7 @@ def make_phenotype_files( lines, pheno_fn_template, use_average_by_strain ):
 					row_value = individual.rows[row_index]
 					write_row_value = ( pheno_file_builder.do_sexes_match(individual)
 						or row_name in Individual.special_rows
-						and not row_value == Individual.missing_value )
+						and not row_value ==  RQTL_MISSING_VALUE_LABEL )
 					if ( write_row_value ):
 						if use_average_by_strain and row_name not in Individual_averaged.special_rows:
 							# pass list of not-yet-averaged phenotype values
@@ -750,7 +779,7 @@ def make_phenotype_files( lines, pheno_fn_template, use_average_by_strain ):
 							pheno_file_builder.row.append(row_value)
 					else:
 						# write empty string
-						pheno_file_builder.row.append(Individual.missing_value)
+						pheno_file_builder.row.append( RQTL_MISSING_VALUE_LABEL)
 					# add row to linebuffer
 					is_last_strain = strain_index == len(ordered_strains)-1
 					is_last_individual_of_strain = individual_index == len(individuals)-1

@@ -30,7 +30,7 @@ class test_averaged(unittest.TestCase):
 		self.assertEqual(male_husky.strain, strain)
 		# each non-missing value is part of a list of values that will be averaged
 		for index, phenotype in enumerate(self.line[3:]):
-			if phenotype == Individual.missing_value:
+			if phenotype == RQTL_MISSING_VALUE_LABEL:
 				self.assertEqual(male_husky.rows[index], self.line[3+index])
 			else:
 				self.assertEqual(male_husky.rows[index], [self.line[3+index]])
