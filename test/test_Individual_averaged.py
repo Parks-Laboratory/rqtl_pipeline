@@ -11,13 +11,13 @@ class test__init__(unittest.TestCase):
 		self.individual_averaged = Individual_averaged(self.line, 'male')
 		self.assertTrue(self.individual_averaged.is_male())
 
-		self.assertNotIn('not_a_sex', SEX_LABEL_AS_NUMERIC)
+		self.assertNotIn('not_a_sex', Global.SEX_LABEL_AS_NUMERIC)
 
 
 class test_add(unittest.TestCase):
 	def setUp(self):
 		self.line=['iid','strain','male', '-']
-		self.missing_value= RQTL_MISSING_VALUE_LABEL
+		self.missing_value= Global.RQTL_MISSING_VALUE_LABEL
 		self.individual_averaged=Individual_averaged(self.line, 'female')
 		self.assertEqual(self.missing_value, '-')
 
@@ -88,8 +88,8 @@ class test_average_round_max(unittest.TestCase):
 		self.assertAvgEqual(['6.55','3.55'], '5.05')	# sum=10.10, sf=3, avg=5.05
 
 	def test_missing_value(self):
-		self.assertAvgEqual([ RQTL_MISSING_VALUE_LABEL],
-			 RQTL_MISSING_VALUE_LABEL)
+		self.assertAvgEqual([ Global.RQTL_MISSING_VALUE_LABEL],
+			 Global.RQTL_MISSING_VALUE_LABEL)
 
 
 #

@@ -4,14 +4,14 @@ import unittest
 class test_Significant_value_max(unittest.TestCase):
 	'''Test implementation of Significant_value class
 
-	In particular tests implementation where rounding_method == Rounding_method.max'''
+	In particular tests implementation where rounding_method == Rounding_method.MAX'''
 
 	def assertRoundingEqual(self, sum, average, correctly_rounded_value):
 		'''Wrapper function to test Significant_value.round()
 
 		Compare string value of rounded value with correctly_rounded_value
 		Accesses rounding_method from user-set global variable in get_rqtl.py'''
-		rounding_method = Rounding_method.max
+		rounding_method = Rounding_method.MAX
 		self.assertEqual(
 			str(Significant_value.round(Decimal(sum), Decimal(average), rounding_method))
 			,correctly_rounded_value )

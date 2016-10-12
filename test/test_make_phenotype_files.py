@@ -56,8 +56,8 @@ class test_make_phenotype_files_average(unittest.TestCase):
 		'''-use File.readlines() to get next string of each file
 		and assert that they are equal
 		-TODO decide what test should do'''
-		output_dir = dir.path	# set global variable in makeRQTLInputs
-		print(output_dir)
+		Global.output_dir = dir.path	# set global variable in makeRQTLInputs
+		print(Global.output_dir)
 		input = io.StringIO(inputFile)
 		pheno_lines = [line.strip().split(',') for line in input]
 		input.close()
@@ -66,7 +66,7 @@ class test_make_phenotype_files_average(unittest.TestCase):
 		# file = open(os.path.join(output_dir,'test.txt'))
 		# linesFromString = [line.strip().split(',') for line in inputFile]
 		use_average_by_strain = True
-		make_phenotype_files(pheno_lines, pheno_filename_suffix, use_average_by_strain)
+		make_phenotype_files(pheno_lines, Parameter.PHENO_FILENAME_SUFFIX, use_average_by_strain)
 
 
 	# @classmethod

@@ -27,7 +27,7 @@ class test_replace_missing_value(unittest.TestCase):
 
 	def test_non_numeric_values(self):
 		for value in self.non_numeric_values:
-			self.assertEqual( RQTL_MISSING_VALUE_LABEL, Individual.replace_missing_value(value) )
+			self.assertEqual( Global.RQTL_MISSING_VALUE_LABEL, Individual.replace_missing_value(value) )
 
 
 	def test_numeric_values(self):
