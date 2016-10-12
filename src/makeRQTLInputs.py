@@ -814,7 +814,8 @@ if __name__ == '__main__':
 		if num_args == 5 and sys.argv[4] == '-average':
 			use_average_by_strain = True
 
-		pheno_lines = [line.strip().split(',') for line in pheno_file.readlines()]
+		pheno_lines = [line.strip().split(',') for line in pheno_file]
+		print(pheno_lines)
 		t0 = time.clock()	# see how long query took
 		# Build phenotype files
 		phenotype_data_by_strain = make_phenotype_files( pheno_lines, pheno_filename_suffix, use_average_by_strain )
@@ -824,7 +825,7 @@ if __name__ == '__main__':
 		geno_input_path = os.path.normpath( sys.argv[2] )
 		geno_file = open(geno_input_path)
 
-		geno_lines = [line.strip().split('\t') for line in geno_file.readlines() if line.strip()]
+		geno_lines = [line.strip().split('\t') for line in geno_file if line.strip()]
 		geno_file.close()
 
 		# Convert marker lines to strings, store in dictionary for fast lookup:
