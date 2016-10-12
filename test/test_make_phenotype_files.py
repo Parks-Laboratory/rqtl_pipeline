@@ -1,5 +1,6 @@
 from src.makeRQTLInputs import *
 import unittest
+import io
 from testfixtures import tempdir, compare	# easier setup/cleanup test output
 '''
 TODO:
@@ -27,8 +28,7 @@ inputFile = '''Mouse ID,Strain,Sex,Weight-0 wks diet,AVG Food Intake - 4 Wks Die
 	OB-638,BXD27/TyJ,Female,19.66,3.4,22,246,0.034066768
 	OB-639,BXD27/TyJ,Female,21.76,3.4,28,254,0.04117155
 	OB-640,BXD27/TyJ,Female,19.39,3.4,33,201,0.031396196
-	OB-641,BXD27/TyJ,Female,17.51,3.4,21,196,0.031466593
-	'''
+	OB-641,BXD27/TyJ,Female,17.51,3.4,21,196,0.031466593'''
 
 inputLines = [line.strip().split(',') for line in inputFile]
 
@@ -49,18 +49,25 @@ class test_make_phenotype_files_average(unittest.TestCase):
 			Esterified Chol,-1,135,-,110,199.7946,-
 			Liver/NMR_Mass_8wks,0.039950784,0.033061516,-,0.030456074,0.034160886,-
 			sex,0,1,0,1,0,1
-			id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
-			'''
+			id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m'''
 
 	@tempdir()
-	def test(self, dir):
+	def test_hetro(self, dir):
 		'''-use File.readlines() to get next string of each file
 		and assert that they are equal
 		-TODO decide what test should do'''
-		# make_phenotype_files()
 		output_dir = dir.path	# set global variable in makeRQTLInputs
-		# dir.write('test.txt', '', 'utf-8')
-		# compare(dir.read('test.txt', 'utf-8'), 'something')
+		print(output_dir)
+		input = io.StringIO(inputFile)
+		pheno_lines = [line.strip().split(',') for line in input]
+		input.close()
+		# file = open('test.txt', 'utf-8')
+		# dir.write('test.txt', inputFile, 'utf-8')
+		# file = open(os.path.join(output_dir,'test.txt'))
+		# linesFromString = [line.strip().split(',') for line in inputFile]
+		use_average_by_strain = True
+		make_phenotype_files(pheno_lines, pheno_filename_suffix, use_average_by_strain)
+
 
 	# @classmethod
 	# def tearDownClass(cls):
@@ -75,8 +82,7 @@ class test_make_phenotype_files_not_averaged(unittest.TestCase):
 			Esterified Chol,135,-,-,-51,-71,119,-,116,110,105,223.4375,159.375,118.75,246,254,201,196
 			Liver/NMR_Mass_8wks,0.034937672,0.032453926,0.031792949,0.037768186,0.04374075,0.038343416,-,0.026576982,0.035573502,0.029217737,0.03878796,0.031361702,0.030875435,0.034066768,0.04117155,0.031396196,0.031466593
 			sex,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0
-			id,OB_642,OB_643,OB_644,OB_645,OB_646,OB_647,OB_794,OB_795,OB_847,OB_848,OB_125,OB_126,OB_127,OB_638,OB_639,OB_640,OB_641
-			'''
+			id,OB_642,OB_643,OB_644,OB_645,OB_646,OB_647,OB_794,OB_795,OB_847,OB_848,OB_125,OB_126,OB_127,OB_638,OB_639,OB_640,OB_641'''
 
 	def test(self):
 		# TODO decide what test should do
