@@ -82,6 +82,7 @@ import string
 # for fixed-point representation:
 from decimal import (Decimal, Context, InvalidOperation, ROUND_HALF_EVEN,
 	getcontext, setcontext)
+from abc import ABCMeta, abstractmethod # for declaring FileBuilder an abstract class
 import re				# for determining true count of significant digits
 						# in a numeric string
 from enum import Enum
@@ -149,7 +150,7 @@ class Parameter():
 #######################################################
 ##   Main program:
 #######################################################
-class File_builder(object):
+class File_builder(metaclass=ABCMeta):
 	'''
 	Deals with formatting useful for all files, and in particular the main
 	genotype file and each of the chromosome files
@@ -163,12 +164,14 @@ class File_builder(object):
 		self.name = name.lower()
 		self.file = None
 		self.filename = os.path.normpath( '%s/%s_%s' % ( Global.output_dir, self.name, fn_template ) )
+		# self.filename = os.path.normpath( os.path.join(Global.output_dir, '%s_%s' % ( self.name, fn_template )) )
 		self.linebuffer = []
 
 	def open(self):
 		'''Opens file for writing'''
 		self.file = open(self.filename, 'w')
 
+	@abstractmethod
 	def append(self, row):
 		'''Adds a row returned by query to the linebuffer'''
 		sys.exit('Error: append() is abstract function')
