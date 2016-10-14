@@ -1,7 +1,7 @@
 from src.makeRQTLInputs import *
 import unittest
 import io
-from testfixtures import tempdir, compare	# easier setup/cleanup test output
+from testfixtures import TempDirectory, tempdir, compare	# easier setup/cleanup test output
 '''
 TODO:
 	-Make simple phenotypes.csv for classes in this file to read in
@@ -49,19 +49,20 @@ class test_make_phenotype_files_average(unittest.TestCase):
 		-Don't need to test rounding or scientific notation
 		b/c other test classes exist to check for that
 	'''
-
-	@tempdir()
 	@classmethod
-	def setUpClass(cls, dir):
-		print(cls.dir.path)
+	def setUpClass(cls):
+		dir = TempDirectory()
+		cls.dir = dir
 
-	@tempdir()
-	def test_hetro(self, dir):
-		'''-use File.readlines() to get next string of each file
-		and assert that they are equal
-		-TODO decide what test should do'''
+		Global.output_dir = dir.path	# set global variable in makeRQTLInputs
+		input = io.StringIO(inputFile)
+		pheno_lines = [line.strip().split(',') for line in input]
+		input.close()
+		use_average_by_strain = True
 
-		# python appends \n to ever line, so for comparing on windows add \r to make \r\n
+		make_phenotype_files(pheno_lines, Parameter.PHENO_FILENAME_SUFFIX, use_average_by_strain)
+
+	def test_hetro(self):
 		correct_output ='''Weight_0_wks_diet,18.44,25.48,-,22.46,19.763,-
 AVG_Food_Intake_4_Wks_Diet,1.796666667,1.916,-,4.418,3.3859,-
 Trigly,21,26,-,55.7,28.02679,-
@@ -72,37 +73,141 @@ id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
 '''
 		correct_output = correct_output.replace('\n', os.linesep)
 
+		output_filename = File_builder.build_filename(
+			Parameter.PHENO_FILENAME_PREFIXES[Global.HETERO],
+			Parameter.PHENO_FILENAME_SUFFIX )
+		output = test_make_phenotype_files_average.dir.read(output_filename, 'utf-8')
+
+		self.maxDiff = None  # display comparisons of all lines
+		self.assertMultiLineEqual(output, correct_output)
+
+	def test_female(self):
+		correct_output ='''Weight_0_wks_diet,18.44,-,-,-,19.763,-
+AVG_Food_Intake_4_Wks_Diet,1.796666667,-,-,-,3.3859,-
+Trigly,21,-,-,-,28.02679,-
+Esterified_Chol,-1,-,-,-,199.79464,-
+Liver_NMR_Mass_8wks,0.039950784,-,-,-,0.0341608863,-
+sex,0,1,0,1,0,1
+id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
+'''
+		correct_output = correct_output.replace('\n', os.linesep)
+
+		output_filename = File_builder.build_filename(
+			Parameter.PHENO_FILENAME_PREFIXES[Global.FEMALE],
+			Parameter.PHENO_FILENAME_SUFFIX )
+		output = test_make_phenotype_files_average.dir.read(output_filename, 'utf-8')
+
+		self.maxDiff = None  # display comparisons of all lines
+		self.assertMultiLineEqual(output, correct_output)
+
+	def test_male(self):
+		correct_output ='''Weight_0_wks_diet,-,25.48,-,22.46,-,-
+AVG_Food_Intake_4_Wks_Diet,-,1.916,-,4.418,-,-
+Trigly,-,26,-,55.7,-,-
+Esterified_Chol,-,135,-,110,-,-
+Liver_NMR_Mass_8wks,-,0.033061516,-,0.030456074,-,-
+sex,0,1,0,1,0,1
+id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
+'''
+		correct_output = correct_output.replace('\n', os.linesep)
+
+		output_filename = File_builder.build_filename(
+			Parameter.PHENO_FILENAME_PREFIXES[Global.MALE],
+			Parameter.PHENO_FILENAME_SUFFIX )
+		output = test_make_phenotype_files_average.dir.read(output_filename, 'utf-8')
+
+		self.maxDiff = None  # display comparisons of all lines
+		self.assertMultiLineEqual(output, correct_output)
+
+
+	@classmethod
+	def tearDownClass(cls):
+		TempDirectory.cleanup_all()
+
+@unittest.skip("not done")
+class test_make_phenotype_files_not_averaged(unittest.TestCase):
+	'''
+	Test goals:
+		-Need to make sure that output file averages were derived from
+		the correct group (Strain then Sex) in input file
+		-Don't need to test rounding or scientific notation
+		b/c other test classes exist to check for that
+	'''
+
+	@classmethod
+	def setUpClass(cls):
+		dir = TempDirectory()
+		cls.dir = dir
 
 		Global.output_dir = dir.path	# set global variable in makeRQTLInputs
 		input = io.StringIO(inputFile)
 		pheno_lines = [line.strip().split(',') for line in input]
 		input.close()
-		# file = open('test.txt', 'utf-8')
-		# dir.write('test.txt', inputFile, 'utf-8')
-		# file = open(os.path.join(output_dir,'test.txt'))
-		# linesFromString = [line.strip().split(',') for line in inputFile]
 		use_average_by_strain = True
+
+		make_phenotype_files(pheno_lines, Parameter.PHENO_FILENAME_SUFFIX, use_average_by_strain)
+
+	def test_hetro(self):
+		correct_output ='''Weight_0_wks_diet,18.44,25.48,-,22.46,19.763,-
+AVG_Food_Intake_4_Wks_Diet,1.796666667,1.916,-,4.418,3.3859,-
+Trigly,21,26,-,55.7,28.02679,-
+Esterified_Chol,-1,135,-,110,199.79464,-
+Liver_NMR_Mass_8wks,0.039950784,0.033061516,-,0.030456074,0.0341608863,-
+sex,0,1,0,1,0,1
+id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
+'''
+		correct_output = correct_output.replace('\n', os.linesep)
+
 		output_filename = File_builder.build_filename(
 			Parameter.PHENO_FILENAME_PREFIXES[Global.HETERO],
 			Parameter.PHENO_FILENAME_SUFFIX )
+		output = test_make_phenotype_files_average.dir.read(output_filename, 'utf-8')
 
-		make_phenotype_files(pheno_lines, Parameter.PHENO_FILENAME_SUFFIX, use_average_by_strain)
-		output = dir.read(output_filename, 'utf-8')
-		# examine_dir(dir)
-		# self.assertMultiLineEqual(output, correct_output)
-		# compare(dir.read(output_filename, 'utf-8'), correctOutputFile)
+		self.maxDiff = None  # display comparisons of all lines
+		self.assertMultiLineEqual(output, correct_output)
+
+	def test_female(self):
+		correct_output ='''Weight_0_wks_diet,18.44,-,-,-,19.763,-
+AVG_Food_Intake_4_Wks_Diet,1.796666667,-,-,-,3.3859,-
+Trigly,21,-,-,-,28.02679,-
+Esterified_Chol,-1,-,-,-,199.79464,-
+Liver_NMR_Mass_8wks,0.039950784,-,-,-,0.0341608863,-
+sex,0,1,0,1,0,1
+id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
+'''
+		correct_output = correct_output.replace('\n', os.linesep)
+
+		output_filename = File_builder.build_filename(
+			Parameter.PHENO_FILENAME_PREFIXES[Global.FEMALE],
+			Parameter.PHENO_FILENAME_SUFFIX )
+		output = test_make_phenotype_files_average.dir.read(output_filename, 'utf-8')
+
+		self.maxDiff = None  # display comparisons of all lines
+		self.assertMultiLineEqual(output, correct_output)
+
+	def test_male(self):
+		correct_output ='''Weight_0_wks_diet,-,25.48,-,22.46,-,-
+AVG_Food_Intake_4_Wks_Diet,-,1.916,-,4.418,-,-
+Trigly,-,26,-,55.7,-,-
+Esterified_Chol,-,135,-,110,-,-
+Liver_NMR_Mass_8wks,-,0.033061516,-,0.030456074,-,-
+sex,0,1,0,1,0,1
+id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
+'''
+		correct_output = correct_output.replace('\n', os.linesep)
+
+		output_filename = File_builder.build_filename(
+			Parameter.PHENO_FILENAME_PREFIXES[Global.MALE],
+			Parameter.PHENO_FILENAME_SUFFIX )
+		output = test_make_phenotype_files_average.dir.read(output_filename, 'utf-8')
+
 		self.maxDiff = None  # display comparisons of all lines
 		self.assertMultiLineEqual(output, correct_output)
 
 
-	# @classmethod
-	# def tearDownClass(cls):
-	# 	self.dir.cleanup()
-
-@unittest.skip("not done")
-class test_make_phenotype_files_not_averaged(unittest.TestCase):
-	# @classmethod
-	# def setUpClass(cls):
+	@classmethod
+	def tearDownClass(cls):
+		TempDirectory.cleanup_all()
 
 	def test(self):
 		correct_outputFile ='''Weight_0_wks_diet,26.13,24.3,26.02,17.5,16.8,21.03,21.8,22.77,23.4,21.89,20.76,19.5,19.76,19.66,21.76,19.39,17.51
