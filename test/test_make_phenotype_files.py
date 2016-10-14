@@ -33,8 +33,8 @@ inputFile = '''Mouse ID,Strain,Sex,Weight-0 wks diet,AVG Food Intake - 4 Wks Die
 inputLines = [line.strip().split(',') for line in inputFile]
 
 def examine_dir(dir):
-	'''Pauses execution to allow examinatino of temporary directory'''
-	print(dir.path)
+	'''Pauses execution to allow examination of temporary directory'''
+	print('Temporary dir.:',dir.path)
 	print('Press "y" to continue execution.')
 	cmd = 'n'
 	while(cmd != 'y'):
@@ -124,7 +124,6 @@ id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
 	def tearDownClass(cls):
 		TempDirectory.cleanup_all()
 
-@unittest.skip("not done")
 class test_make_phenotype_files_not_averaged(unittest.TestCase):
 	'''
 	Test goals:
@@ -143,63 +142,65 @@ class test_make_phenotype_files_not_averaged(unittest.TestCase):
 		input = io.StringIO(inputFile)
 		pheno_lines = [line.strip().split(',') for line in input]
 		input.close()
-		use_average_by_strain = True
+		use_average_by_strain = False
 
 		make_phenotype_files(pheno_lines, Parameter.PHENO_FILENAME_SUFFIX, use_average_by_strain)
 
 	def test_hetro(self):
-		correct_output ='''Weight_0_wks_diet,18.44,25.48,-,22.46,19.763,-
-AVG_Food_Intake_4_Wks_Diet,1.796666667,1.916,-,4.418,3.3859,-
-Trigly,21,26,-,55.7,28.02679,-
-Esterified_Chol,-1,135,-,110,199.79464,-
-Liver_NMR_Mass_8wks,0.039950784,0.033061516,-,0.030456074,0.0341608863,-
-sex,0,1,0,1,0,1
-id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
+		correct_output ='''Weight_0_wks_diet,26.13,24.3,26.02,17.5,16.8,21.03,21.8,22.77,23.4,21.89,20.76,19.5,19.76,19.66,21.76,19.39,17.51
+AVG_Food_Intake_4_Wks_Diet,1.916,1.916,1.916,1.796666667,1.796666667,1.796666667,-,-,4.418,4.418,3.367,3.367,3.367,3.4,3.4,3.4,3.4
+Trigly,26,-,-,-,-,21,-,42,78,47,45.3125,26.5625,20.3125,22,28,33,21
+Esterified_Chol,135,-,-,-51,-71,119,-,116,110,105,223.4375,159.375,118.75,246,254,201,196
+Liver_NMR_Mass_8wks,0.034937672,0.032453926,0.031792949,0.037768186,0.04374075,0.038343416,-,0.026576982,0.035573502,0.029217737,0.03878796,0.031361702,0.030875435,0.034066768,0.04117155,0.031396196,0.031466593
+sex,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0
+id,OB_642,OB_643,OB_644,OB_645,OB_646,OB_647,OB_794,OB_795,OB_847,OB_848,OB_125,OB_126,OB_127,OB_638,OB_639,OB_640,OB_641
 '''
 		correct_output = correct_output.replace('\n', os.linesep)
 
 		output_filename = File_builder.build_filename(
 			Parameter.PHENO_FILENAME_PREFIXES[Global.HETERO],
 			Parameter.PHENO_FILENAME_SUFFIX )
-		output = test_make_phenotype_files_average.dir.read(output_filename, 'utf-8')
+		output = test_make_phenotype_files_not_averaged.dir.read(output_filename, 'utf-8')
 
 		self.maxDiff = None  # display comparisons of all lines
 		self.assertMultiLineEqual(output, correct_output)
 
+	# @unittest.skip("not done")
 	def test_female(self):
-		correct_output ='''Weight_0_wks_diet,18.44,-,-,-,19.763,-
-AVG_Food_Intake_4_Wks_Diet,1.796666667,-,-,-,3.3859,-
-Trigly,21,-,-,-,28.02679,-
-Esterified_Chol,-1,-,-,-,199.79464,-
-Liver_NMR_Mass_8wks,0.039950784,-,-,-,0.0341608863,-
-sex,0,1,0,1,0,1
-id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
+		correct_output ='''Weight_0_wks_diet,-,-,-,17.5,16.8,21.03,-,-,-,-,20.76,19.5,19.76,19.66,21.76,19.39,17.51
+AVG_Food_Intake_4_Wks_Diet,-,-,-,1.796666667,1.796666667,1.796666667,-,-,-,-,3.367,3.367,3.367,3.4,3.4,3.4,3.4
+Trigly,-,-,-,-,-,21,-,-,-,-,45.3125,26.5625,20.3125,22,28,33,21
+Esterified_Chol,-,-,-,-51,-71,119,-,-,-,-,223.4375,159.375,118.75,246,254,201,196
+Liver_NMR_Mass_8wks,-,-,-,0.037768186,0.04374075,0.038343416,-,-,-,-,0.03878796,0.031361702,0.030875435,0.034066768,0.04117155,0.031396196,0.031466593
+sex,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0
+id,OB_642,OB_643,OB_644,OB_645,OB_646,OB_647,OB_794,OB_795,OB_847,OB_848,OB_125,OB_126,OB_127,OB_638,OB_639,OB_640,OB_641
 '''
 		correct_output = correct_output.replace('\n', os.linesep)
 
 		output_filename = File_builder.build_filename(
 			Parameter.PHENO_FILENAME_PREFIXES[Global.FEMALE],
 			Parameter.PHENO_FILENAME_SUFFIX )
-		output = test_make_phenotype_files_average.dir.read(output_filename, 'utf-8')
+		output = test_make_phenotype_files_not_averaged.dir.read(output_filename, 'utf-8')
 
 		self.maxDiff = None  # display comparisons of all lines
 		self.assertMultiLineEqual(output, correct_output)
-
+#
+	# @unittest.skip("not done")
 	def test_male(self):
-		correct_output ='''Weight_0_wks_diet,-,25.48,-,22.46,-,-
-AVG_Food_Intake_4_Wks_Diet,-,1.916,-,4.418,-,-
-Trigly,-,26,-,55.7,-,-
-Esterified_Chol,-,135,-,110,-,-
-Liver_NMR_Mass_8wks,-,0.033061516,-,0.030456074,-,-
-sex,0,1,0,1,0,1
-id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
+		correct_output ='''Weight_0_wks_diet,26.13,24.3,26.02,-,-,-,21.8,22.77,23.4,21.89,-,-,-,-,-,-,-
+AVG_Food_Intake_4_Wks_Diet,1.916,1.916,1.916,-,-,-,-,-,4.418,4.418,-,-,-,-,-,-,-
+Trigly,26,-,-,-,-,-,-,42,78,47,-,-,-,-,-,-,-
+Esterified_Chol,135,-,-,-,-,-,-,116,110,105,-,-,-,-,-,-,-
+Liver_NMR_Mass_8wks,0.034937672,0.032453926,0.031792949,-,-,-,-,0.026576982,0.035573502,0.029217737,-,-,-,-,-,-,-
+sex,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0
+id,OB_642,OB_643,OB_644,OB_645,OB_646,OB_647,OB_794,OB_795,OB_847,OB_848,OB_125,OB_126,OB_127,OB_638,OB_639,OB_640,OB_641
 '''
 		correct_output = correct_output.replace('\n', os.linesep)
 
 		output_filename = File_builder.build_filename(
 			Parameter.PHENO_FILENAME_PREFIXES[Global.MALE],
 			Parameter.PHENO_FILENAME_SUFFIX )
-		output = test_make_phenotype_files_average.dir.read(output_filename, 'utf-8')
+		output = test_make_phenotype_files_not_averaged.dir.read(output_filename, 'utf-8')
 
 		self.maxDiff = None  # display comparisons of all lines
 		self.assertMultiLineEqual(output, correct_output)
@@ -208,15 +209,3 @@ id,BXD1_TyJ.f,BXD1_TyJ.m,BXD11_TyJ.f,BXD11_TyJ.m,BXD27_TyJ.f,BXD27_TyJ.m
 	@classmethod
 	def tearDownClass(cls):
 		TempDirectory.cleanup_all()
-
-	def test(self):
-		correct_outputFile ='''Weight_0_wks_diet,26.13,24.3,26.02,17.5,16.8,21.03,21.8,22.77,23.4,21.89,20.76,19.5,19.76,19.66,21.76,19.39,17.51
-AVG_Food_Intake_4_Wks_Diet,1.916,1.916,1.916,1.796666667,1.796666667,1.796666667,-,-,4.418,4.418,3.367,3.367,3.367,3.4,3.4,3.4,3.4
-Trigly,26,-,-,-,-,21,-,42,78,47,45.3125,26.5625,20.3125,22,28,33,21
-Esterified_Chol,135,-,-,-51,-71,119,-,116,110,105,223.4375,159.375,118.75,246,254,201,196
-Liver_NMR_Mass_8wks,0.034937672,0.032453926,0.031792949,0.037768186,0.04374075,0.038343416,-,0.026576982,0.035573502,0.029217737,0.03878796,0.031361702,0.030875435,0.034066768,0.04117155,0.031396196,0.031466593
-sex,1,1,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0
-id,OB_642,OB_643,OB_644,OB_645,OB_646,OB_647,OB_794,OB_795,OB_847,OB_848,OB_125,OB_126,OB_127,OB_638,OB_639,OB_640,OB_641
-'''
-		# TODO decide what test should do
-		self.assertTrue(True)
