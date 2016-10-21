@@ -30,8 +30,6 @@ OB-639,BXD27/TyJ,Female,21.76,3.4,28,254,0.04117155
 OB-640,BXD27/TyJ,Female,19.39,3.4,33,201,0.031396196
 OB-641,BXD27/TyJ,Female,17.51,3.4,21,196,0.031466593'''
 
-inputLines = [line.strip().split(',') for line in inputFile]
-
 def examine_dir(dir):
 	'''Pauses execution to allow examination of temporary directory'''
 	print('Temporary dir.:',dir.path)

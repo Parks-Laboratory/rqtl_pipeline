@@ -95,9 +95,9 @@ import re				# for determining true count of significant digits
 						# in a numeric string
 from enum import Enum
 
-#######################################################
+################################################################################
 ##   Global fields (do not change):
-#######################################################
+################################################################################
 class Global():
 	MAKE_CHROMOSOME_FILES = False	# Has bug where headings written but no genotyeps
 	CHROMOSOMES = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','x']
@@ -123,9 +123,11 @@ class Rounding_method(Enum):
 	NO_ROUNDING = 'no rounding'
 
 
-#######################################################
-##   Parameters set by user (change as desired/needed):
-#######################################################
+################################################################################
+##   Parameters set by user
+##		Change single-quoted parts as needed/desired, and also the value of
+##		ROUNDING_METHOD
+################################################################################
 class Parameter():
 	SQL_SERVER_NAME = 'PARKSLAB'
 	DATABASE = 'HMDP'
@@ -155,9 +157,9 @@ class Parameter():
 	ROUNDING_METHOD = Rounding_method.MAX
 
 
-#######################################################
+################################################################################
 ##   Main program:
-#######################################################
+################################################################################
 class File_builder(metaclass=ABCMeta):
 	'''
 	Deals with formatting useful for all files, and in particular the main

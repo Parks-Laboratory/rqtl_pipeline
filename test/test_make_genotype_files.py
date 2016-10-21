@@ -13,8 +13,7 @@ def examine_dir(dir):
 		cmd = input()
 
 
-geno_file = '''
-rs29270490
+geno_file = '''rs29270490
 rs50906391
 rs29588301
 rs29568258
@@ -47,9 +46,10 @@ OB-640,BXD27/TyJ,Female,19.39,3.4,33,201,0.031396196
 OB-641,BXD27/TyJ,Female,17.51,3.4,21,196,0.031466593'''
 
 
-class geno_test():
+class geno_test(unittest.TestCase):
 	'''Set-up functionality required for test-classes in this file'''
 	def buildFiles(cls, use_average_by_strain):
+		# pdb.set_trace()
 		dir = TempDirectory()
 		cls.dir = dir
 		Global.output_dir = dir.path	# set global variable in makeRQTLInputs
@@ -70,6 +70,7 @@ class geno_test():
 
 		make_genotype_files( phenotype_data_by_strain, markers )
 
+
 	def compareFiles(self, cls, correct_output):
 		correct_output = correct_output.replace('\n', os.linesep)
 
@@ -80,9 +81,12 @@ class geno_test():
 		output = cls.dir.read(output_filename, 'utf-8')
 
 		# examine_dir(cls.dir)
-		# pdb.set_trace()
 		self.maxDiff = None  # display comparisons of all lines
 		self.assertMultiLineEqual(output, correct_output)
+
+	@classmethod
+	def tearDownClass(cls):
+		TempDirectory.cleanup_all()
 
 
 # @unittest.skip("not done")
@@ -107,10 +111,6 @@ rs29270490,X,66.918496,A,A,A,A,B,B
 '''
 		super().compareFiles(type(self), correct_output)
 
-	@classmethod
-	def tearDownClass(cls):
-		TempDirectory.cleanup_all()
-
 
 # @unittest.skip("not done")
 class test_make_genotype_files_not_average(geno_test):
@@ -132,7 +132,3 @@ rs36773429,9,42.7108535,B,B,B,B,B,B,A,A,A,A,A,A,A,A,A,A,A
 rs29270490,X,66.918496,A,A,A,A,A,A,A,A,A,A,B,B,B,B,B,B,B
 '''
 		super().compareFiles(type(self), correct_output)
-
-	@classmethod
-	def tearDownClass(cls):
-		TempDirectory.cleanup_all()
