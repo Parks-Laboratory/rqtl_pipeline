@@ -51,6 +51,14 @@ Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <outpu
 				<Global.RQTL_SEX_LABEL>,<1st individual's sex>,...,<nth individual's sex>
 				<Global.RQTL_ID_LABEL>,<1st individual's id>,...,<nth individual's id>
 
+				Notes:
+					hetero file contains phenotype values for all males and females
+					female file contains phenotype values for all females, and marks
+						the phenotype values for all males as missing
+					male file (analogous to female file, female values all marked missing)
+
+
+
 Notes:
 	-make_genotype_files() is dependent on results from make_phenotype_files().
 	This is due to the contraint that R/QTL requires the columns of both
@@ -160,11 +168,21 @@ class File_builder(metaclass=ABCMeta):
 	column_labels_by_strain = None
 	formatted_row = None
 
-	def __init__(self, name, fn_template):
-		self.name = name.lower()
+	def build_filename(filename_prefix, filename_suffix):
+		return( os.path.join(Global.output_dir, filename_prefix + '_' + filename_suffix ) )
+
+	def __init__(self, filename_prefix, filename_suffix):
+		'''
+		Abstract constructor
+
+		Args
+			filename_prefix (str): filename prefix
+				e.g. male, female, hetero
+			filename_suffix (str):
+		'''
+		self.filename_prefix = filename_prefix.lower()
 		self.file = None
-		self.filename = os.path.normpath( '%s/%s_%s' % ( Global.output_dir, self.name, fn_template ) )
-		# self.filename = os.path.normpath( os.path.join(Global.output_dir, '%s_%s' % ( self.name, fn_template )) )
+		self.filename = File_builder.build_filename(self.filename_prefix, filename_suffix)
 		self.linebuffer = []
 
 	def open(self):
@@ -175,10 +193,12 @@ class File_builder(metaclass=ABCMeta):
 	def append(self, row):
 		'''Adds a row returned by query to the linebuffer'''
 		sys.exit('Error: append() is abstract function')
-		return
 
 	def write_linebuffer(self):
-		'''Writes the linebuffer to file (when buffer is full)'''
+		'''Writes the linebuffer to file (when buffer is full)
+
+		Uses OS-specific line-endings ()
+		'''
 		self.file.write('\n'.join(self.linebuffer) + '\n')
 		self.file.flush()
 		self.linebuffer = []
@@ -188,10 +208,10 @@ class Geno_file_builder(File_builder):
 	'''
 	Deals with formatting useful for building genotype files
 	'''
-	def __init__(self, name, fn_template, data_by_strain):
+	def __init__(self, filename_prefix, filename_suffix, data_by_strain):
 		'''data_by_strain: an object of class Strains'''
 		self.data_by_strain = data_by_strain
-		super().__init__(name, fn_template)
+		super().__init__(filename_prefix, filename_suffix)
 
 	def append(self, row):
 		'''Adds a row returned by query to the linebuffer'''
@@ -244,11 +264,11 @@ class Pheno_file_builder(File_builder):
 	'''
 	Deals with formatting useful for building phenotype files
 	'''
-	def __init__(self, sex, fn_template):
-		name = sex	# default for pheno file builder that creates only a list of phenotype names
+	def __init__(self, sex, filename_suffix):
+		filename_prefix = sex	# default for pheno file builder that creates only a list of phenotype names
 		if sex in Parameter.PHENO_FILENAME_PREFIXES:
-			name = Parameter.PHENO_FILENAME_PREFIXES[sex]
-		super().__init__(name, fn_template)
+			filename_prefix = Parameter.PHENO_FILENAME_PREFIXES[sex]
+		super().__init__(filename_prefix, filename_suffix)
 		self.sex = sex
 		self.row = []
 
@@ -359,7 +379,12 @@ class Individual_averaged(Individual):
 
 
 class Strains(object):
-	'''For each strain, stores phenotype data for individual (either averaged or not)'''
+	'''For each strain, stores phenotype data for individual
+
+	Individuals for of a given sex and strain may be averaged together,
+	in which case an individual refers to all the individuals of a
+	sex-strain group.
+	'''
 
 	def __init__(self, average_by_strain):
 		'''Create Strain object
@@ -528,7 +553,7 @@ class Significant_value():
 		'''
 		Sum up list of numeric strings. Return Decimal value.
 
-		Arguments:
+		Args:
 		values -- list of strings
 		'''
 
@@ -624,7 +649,12 @@ def sanitize_list(string_list):
 
 
 def sort_markers( markers_raw, connection ):
-	'''Query database for correct order of markers, according to bp position'''
+	'''Query database for correct order of markers, according to bp position
+
+	Args
+		markers_raw -- Set of strings
+		connection -- PYODBC connection
+	'''
 
 	# query for correct order of markers
 	query_for_marker_order = 'SELECT ' + Parameter.MARKER_IDENTIFIER_COLUMN_NAME +\
@@ -641,7 +671,7 @@ def sort_markers( markers_raw, connection ):
 		# filter sorted markers to just the ones specified in markers input file
 		if marker in markers_raw:
 			markers_ordered.append(marker)
-			markers_raw.pop(marker)		# ensure that each Parameter.MARKER_IDENTIFIER_COLUMN_NAME is unique/included only once
+			markers_raw.remove(marker)		# ensure that each Parameter.MARKER_IDENTIFIER_COLUMN_NAME is unique/included only once
 	return(markers_ordered)
 
 
@@ -658,21 +688,28 @@ def rqtl_format(list):
 	return(new_list)
 
 
-def make_genotype_files( data_by_strain, markers_raw, geno_fn_template ):
-	'''Main function for building genotype file(s)'''
+def make_genotype_files( data_by_strain, markers_raw ):
+	'''Main function for building genotype file(s)
+
+	Args
+		data_by_strain (Strains): Used to match the order of individuals between
+			phenotype and genotype files
+		markers_raw (Set of str): Marker ids that should be included in genotype
+			file(s)
+	'''
 	num_markers = len(markers_raw)
 
 	# create dictionary holding <file name>:<Geno_file_builder object> pairs
 	files = {}
 
 	filenames = [Parameter.MAIN_GENO_FILENAME_PREFIX]
-	# open files for writing
+	# build list of files for writing
 	if Global.MAKE_CHROMOSOME_FILES:
 		filenames = filenames + Global.CHROMOSOMES
 
 	# for main geno file and (if Global.MAKE_CHROMOSOME_FILES = True) also chromosome files
 	for filename in filenames:
-		files[filename] = Geno_file_builder(filename, geno_fn_template, data_by_strain)
+		files[filename] = Geno_file_builder(filename, Parameter.GENO_FILENAME_SUFFIX, data_by_strain)
 		files[filename].open()
 
 	# connect to database
@@ -753,8 +790,22 @@ def make_genotype_files( data_by_strain, markers_raw, geno_fn_template ):
 	connection.close()
 
 
-def make_phenotype_files( lines, pheno_fn_template, use_average_by_strain ):
-	'''Main function for building phenotype files'''
+def make_phenotype_files( lines,  use_average_by_strain ):
+	'''Main function for building phenotype files
+
+	Args
+		lines (list): Lines of strings where each line corresponds to a line from
+			the source phenotype file
+		use_average_by_strain (Boolean): If True, all females of a given strain
+			will be averaged together for each trait (same for males). If False,
+			all males and females remain separate.
+
+	Returns
+		data_by_strain (Strains): Object which stores information about the order
+			and contents of columns in the phenotype and genotype files. Enables
+			make_genotype_files() to have columns that match those in
+			make_phenotype_files()
+	'''
 	Individual.row_names = (sanitize_list(lines[0][Individual.first_phenotype_column_index: ] +
 						[Global.RQTL_SEX_LABEL] + [Global.RQTL_ID_LABEL]) )
 
@@ -770,7 +821,7 @@ def make_phenotype_files( lines, pheno_fn_template, use_average_by_strain ):
 	sexes = [Global.FEMALE, Global.MALE, Global.HETERO]
 	pheno_file_builders = []
 	for sex in sexes:
-		pheno_file_builder = Pheno_file_builder(sex, pheno_fn_template)
+		pheno_file_builder = Pheno_file_builder(sex, Parameter.PHENO_FILENAME_SUFFIX)
 		pheno_file_builder.open()
 		pheno_file_builders.append(pheno_file_builder)
 
@@ -840,10 +891,9 @@ if __name__ == '__main__':
 			use_average_by_strain = True
 
 		pheno_lines = [line.strip().split(',') for line in pheno_file]
-		print(pheno_lines)
 		t0 = time.clock()	# see how long query took
 		# Build phenotype files
-		phenotype_data_by_strain = make_phenotype_files( pheno_lines, Parameter.PHENO_FILENAME_SUFFIX, use_average_by_strain )
+		phenotype_data_by_strain = make_phenotype_files( pheno_lines, use_average_by_strain )
 		print( 'Pheno files built in %.2f minutes' % ((time.clock()-t0)/60) )
 
 		# Process input for geno file(s):
@@ -853,12 +903,12 @@ if __name__ == '__main__':
 		geno_lines = [line.strip().split('\t') for line in geno_file if line.strip()]
 		geno_file.close()
 
-		# Convert marker lines to strings, store in dictionary for fast lookup:
-		markers = {}
+		# Convert marker lines to strings
+		markers = set()
 		for line in geno_lines:
-			markers[Global.EMPTY_STRING.join(line)] = None
+			markers.add(Global.EMPTY_STRING.join(line))
 
 		t0 = time.clock()	# see how long query took
 		# Build genotype file(s)
-		make_genotype_files( phenotype_data_by_strain, markers, Parameter.GENO_FILENAME_SUFFIX )
+		make_genotype_files( phenotype_data_by_strain, markers )
 		print( 'Geno file built in %.2f minutes' % ((time.clock()-t0)/60) )
