@@ -1,21 +1,28 @@
 # -*- coding: utf-8 -*-
 '''
-Retrieves Mouse Diversity Array genotypes from database in R/QTL format
+Retrieves Mouse Diversity Array genotypes from database in csvsr R/QTL format
+
+The csvsr format has a column for each individual and genotype data or phenotype
+(depending on the file) in the rows (see Outputs section below). This file format
+was chosen because Microsoft SQL Server tables have a maximum number of columns,
+but unlimited number of rows. Individuals could go in either rows or columns,
+but the number of markers (and possibly number of phenotypes) will probably be
+too many to fit in columns, so must go in rows.
 
 Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <output dir.>
 	Inputs:
 		1) File containing the list of markers, one on each line
 			File Format:
-				<marker 1>
-				<marker 2>
+				<1st marker id>
+				<2nd marker id>
 				...
-				<marker n>
+				<mth marker id>
 		2) CSV containing phenotype data
 			File format:
 				Mouse ID,id,Sex,<phenotype label 1>,...,<phenotype label n>
-				<individual id 1>,<strain id>,<Male/Female>,<phenotype 1>,...,<phenotype m>
+				<1st individual id>,<strain id>,<Male/Female>,<1st phenotype>,...,<jth phenotype>
 				...
-				<individual id n>,<strain id>,<Male/Female>,<phenotype 1>,...,<phenotype m>
+				<ith individual id>,<strain id>,<Male/Female>,<1st phenotype>,...,<jth phenotype>
 			Note: Accepted scientific notation formats:
 				-e.g. 1.23E3, 1.23E+3, 1.23E-3,
 					1.23e3, 1.23e+3, 1.23e-3
@@ -31,25 +38,25 @@ Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <outpu
 				<Parameter.MAIN_GENO_FILENAME_PREFIX><Parameter.GENO_FILENAME_SUFFIX>
 					e.g. "main_geno_csvsr.csv"
 			File format:
-				<Global.RQTL_ID_LABEL>,,,<1st individual's id>,...,<nth individual's id>
-				<marker 1 id>,<chromosome #>,<centimorgans>,<1st individual's allele>,...,<mth individual's allele>
+				<Global.RQTL_ID_LABEL>,,,<1st individual's id>,...,<mth individual's id>
+				<1st marker id>,<chromosome #>,<centimorgans>,<1st individual's genotype>,...,<ith individual's genotype>
 				...
-				<marker n id>,<chromosome #>,<centimorgans>,<1st individual's allele>,...,<mth individual's allele>
+				<mth marker id>,<chromosome #>,<centimorgans>,<1st individual's genotype>,...,<ith individual's genotype>
 
 		Phenotype files:
 			Filename format:
-				<female pheno_filename_prefix><Parameter.PHENO_FILENAME_SUFFIX>
+				<female pheno filename prefix><Parameter.PHENO_FILENAME_SUFFIX>
 					e.g. "female_pheno_csvsr.csv"
-				<male pheno_filename_prefix><Parameter.PHENO_FILENAME_SUFFIX>
+				<male pheno filename prefix><Parameter.PHENO_FILENAME_SUFFIX>
 					e.g. "male_pheno_csvsr.csv"
-				<hetero pheno_sexes_filename_prefix><Parameter.PHENO_FILENAME_SUFFIX>
+				<hetero pheno filename prefix><Parameter.PHENO_FILENAME_SUFFIX>
 					e.g. "hetero_pheno_csvsr.csv"
 			File format:
-				<trait 1>, <value for 1st individual>,...,<value for nth individual>
+				<1st phenotype label>, <1st individual's phenotype>,...,<ith individual's phenotype>
 				...
-				<trait n>, <1st individual's value>,...,<nth individual's value>
-				<Global.RQTL_SEX_LABEL>,<1st individual's sex>,...,<nth individual's sex>
-				<Global.RQTL_ID_LABEL>,<1st individual's id>,...,<nth individual's id>
+				<jth phenotype label>, <1st individual's phenotype>,...,<ith individual's value>
+				<Global.RQTL_SEX_LABEL>,<1st individual's sex>,...,<ith individual's sex>
+				<Global.RQTL_ID_LABEL>,<1st individual's id>,...,<ith individual's id>
 
 				Notes:
 					hetero file contains phenotype values for all males and females
@@ -59,17 +66,20 @@ Usage: get_rqtl.py  <csv with phenotype data> <file with list of markers> <outpu
 
 
 
+
 Notes:
 	-make_genotype_files() is dependent on results from make_phenotype_files().
 	This is due to the contraint that R/QTL requires the columns of both
 	input files to match up (i.e. order of individuals is same in both files)
 
 Known issues:
-	-Bug in code that split up genotype data so each data for each chromosome
-	is in its own file
+	-Bug-source must be identified and fixed before MAKE_CHROMOSOME_FILES can
+	be enabled. This option is intended to split genotype data into smaller, more
+	manageable chunks by creating a file for each chromosome in which only the
+	relevant subset of markers would be included.
 
 Future ideas:
-	-Create temporary table in databse w/ all the markers, using the marker
+	-Create temporary table in databse w/ all the markers, using the marker id
 	as primary key. Later, use this table in make_genotype_files() query instead of
 	the massive WHERE clause which currently has thousands of conditions per query
 	-May be able to simplifiy script using Pandas Scientific Computing library
@@ -522,8 +532,8 @@ class Significant_value():
 	'''
 	Set of functions for working with significant figures in numeric strings
 
-	 Has functions for counting sigfigs, and adding and rounding values
-	 '''
+	Has functions for counting sigfigs, and adding and rounding values
+	'''
 
 	def round(sum, average, rounding_method):
 		'''
@@ -554,7 +564,7 @@ class Significant_value():
 		being too high. However, since this MAX keeps more digits than significant
 		anyway, it is unlikely for the true value to be affected significantly.
 
-		Arguments:
+		Args:
 		sum -- Decimal value
 		average -- Decimal value
 		rounding_method -- one of Rounding_method values
