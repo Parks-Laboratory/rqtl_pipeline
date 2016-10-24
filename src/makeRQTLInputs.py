@@ -99,7 +99,6 @@ from enum import Enum
 ##   Global fields (do not change):
 ################################################################################
 class Global():
-	MAKE_CHROMOSOME_FILES = False	# Has bug where headings written but no genotyeps
 	CHROMOSOMES = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','x']
 
 	output_dir = None
@@ -155,6 +154,8 @@ class Parameter():
 							(3 sigfigs, non-deterministic # decimal digits)
 			Rounding_method.NO_ROUNDING: no rounding done, max digits kept (Default: 28 digits)'''
 	ROUNDING_METHOD = Rounding_method.MAX
+
+	MAKE_CHROMOSOME_FILES = False	# Has bug where headings written but no genotyeps
 
 
 ################################################################################
@@ -233,7 +234,8 @@ class Geno_file_builder(File_builder):
 			# and any chromosome file that is to be made
 		# Each column belongs to an individual, with multiple individuals possible
 		# 	in each strain. Therefore, genotype data is often duplicated
-		if Geno_file_builder.formatted_row is None:
+		first_time_reading_in_row = Geno_file_builder.formatted_row is None
+		if not Parameter.MAKE_CHROMOSOME_FILES or first_time_reading_in_row:
 			new_row = []
 			for index, marker_info in enumerate(Geno_file_builder.column_labels_by_strain[ :Global.FIRST_STRAIN_COLUMN_INDEX]):
 				new_row.append(row[index])
@@ -256,7 +258,8 @@ class Geno_file_builder(File_builder):
 
 		# Intent is that column-names are formatted once and re-used for any
 			# chromosome files that are to be made
-		if Geno_file_builder.column_labels_by_iid is None:
+		first_time_reading_in_row = Geno_file_builder.column_labels_by_iid is None
+		if not Parameter.MAKE_CHROMOSOME_FILES or first_time_reading_in_row:
 			new_column_labels = []
 			for name in column_labels[ :Global.FIRST_STRAIN_COLUMN_INDEX]:
 				name = name.replace(Parameter.MARKER_CHROMOSOME_COLUMN_NAME, Global.EMPTY_STRING)
@@ -719,10 +722,10 @@ def make_genotype_files( data_by_strain, markers_raw ):
 
 	filenames = [Parameter.MAIN_GENO_FILENAME_PREFIX]
 	# build list of files for writing
-	if Global.MAKE_CHROMOSOME_FILES:
+	if Parameter.MAKE_CHROMOSOME_FILES:
 		filenames = filenames + Global.CHROMOSOMES
 
-	# for main geno file and (if Global.MAKE_CHROMOSOME_FILES = True) also chromosome files
+	# for main geno file and (if Parameter.MAKE_CHROMOSOME_FILES = True) also chromosome files
 	for filename in filenames:
 		files[filename] = Geno_file_builder(filename, Parameter.GENO_FILENAME_SUFFIX, data_by_strain)
 		files[filename].open()
@@ -779,7 +782,7 @@ def make_genotype_files( data_by_strain, markers_raw ):
 			geno_file_builders_to_alter = [ files[Parameter.MAIN_GENO_FILENAME_PREFIX] ]
 
 			chromosome = None
-			if Global.MAKE_CHROMOSOME_FILES == True:
+			if Parameter.MAKE_CHROMOSOME_FILES == True:
 				# each marker's chromosome name is in column 1 of each row
 				chromosome = files[row[1].lower()]
 				geno_file_builders_to_alter.append(chromosome)
