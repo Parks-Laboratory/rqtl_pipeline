@@ -205,6 +205,18 @@ class File_builder(metaclass=ABCMeta):
 		self.file.flush()
 		self.linebuffer = []
 
+	@classmethod
+	def reset(cls):
+		'''Restore class values to defaults
+
+		Especially needed for testing, when class is used multiple times, but
+		under different conditions.
+		'''
+		cls.column_labels = None
+		cls.column_labels_by_iid = None
+		cls.column_labels_by_strain = None
+		cls.formatted_row = None
+
 
 class Geno_file_builder(File_builder):
 	'''
@@ -289,21 +301,21 @@ class Pheno_file_builder(File_builder):
 
 
 class Individual(object):
-	iid_column_index = 0
-	strain_column_index = 1
-	sex_column_index = 2
-	first_phenotype_column_index = 3
+	IID_COLUMN_INDEX = 0
+	STRAIN_COLUMN_INDEX = 1
+	SEX_COLUMN_INDEX = 2
+	FIRST_PHENOTYPE_COLUMN_INDEX = 3
+	SPECIAL_ROWS = [Global.RQTL_SEX_LABEL, Global.RQTL_ID_LABEL]
 	row_names = None
-	special_rows = [Global.RQTL_SEX_LABEL, Global.RQTL_ID_LABEL]
 
 	def __init__(self, line):
-		self.iid = sanitize(line[Individual.iid_column_index])
-		self.strain = line[Individual.strain_column_index]
-		self.sex = Global.SEX_LABEL_AS_NUMERIC[line[Individual.sex_column_index].lower()]
+		self.iid = sanitize(line[Individual.IID_COLUMN_INDEX])
+		self.strain = line[Individual.STRAIN_COLUMN_INDEX]
+		self.sex = Global.SEX_LABEL_AS_NUMERIC[line[Individual.SEX_COLUMN_INDEX].lower()]
 		self.rows = []
 
 	def add(self, line):
-		for phenotype_value in line[Individual.first_phenotype_column_index: ]:
+		for phenotype_value in line[Individual.FIRST_PHENOTYPE_COLUMN_INDEX: ]:
 			self.rows.append( Individual.replace_missing_value(phenotype_value) )
 		self.rows.append(self.sex)
 		self.rows.append(self.iid)
@@ -329,7 +341,7 @@ class Individual_averaged(Individual):
 	Alternative to Individual class for when phenotype values are to be averaged.
 	'''
 	def __init__(self, line, sex_label):
-		self.strain = line[Individual.strain_column_index]
+		self.strain = line[Individual.STRAIN_COLUMN_INDEX]
 		self.sex = Global.SEX_LABEL_AS_NUMERIC[sex_label.lower()]
 		# Differentiate male and female column labels for each strain
 		iid = [sanitize(self.strain)]
@@ -339,7 +351,7 @@ class Individual_averaged(Individual):
 			iid.append('m')
 		self.iid = '.'.join(iid)
 		# all lines are phenotypes except sex and iid
-		num_phenotype_rows = len(line)-Individual_averaged.first_phenotype_column_index
+		num_phenotype_rows = len(line)-Individual_averaged.FIRST_PHENOTYPE_COLUMN_INDEX
 		self.rows = [ Global.RQTL_MISSING_VALUE_LABEL]*num_phenotype_rows
 		self.rows.append(self.sex)
 		self.rows.append(self.iid)
@@ -348,7 +360,7 @@ class Individual_averaged(Individual):
 		'''
 		Append phenotype values to list of phenotypes
 		'''
-		for phenotype_index, phenotype_value in enumerate(line[Individual_averaged.first_phenotype_column_index: ]):
+		for phenotype_index, phenotype_value in enumerate(line[Individual_averaged.FIRST_PHENOTYPE_COLUMN_INDEX: ]):
 			# replace non-numeric phenotype value with string indicating missing-value
 			phenotype_value = Individual_averaged.replace_missing_value(phenotype_value)
 
@@ -412,11 +424,12 @@ class Strains(object):
 		all values in male list get averaged and all values in female list get
 		averaged.
 
-		Adds new strain to an ordered list which is used in make_phenotype_files()
+		Adds new strain (unaltered from input file, in order to match strain
+		name in database) to an ordered list which is used in make_phenotype_files()
 		and make_genotype_files().
 		'''
-		strain = line[Individual_averaged.strain_column_index]
-		sex = Global.SEX_LABEL_AS_NUMERIC[ line[Individual_averaged.sex_column_index].lower() ]
+		strain = line[Individual_averaged.STRAIN_COLUMN_INDEX]
+		sex = Global.SEX_LABEL_AS_NUMERIC[ line[Individual_averaged.SEX_COLUMN_INDEX].lower() ]
 		if strain not in self.strains:
 			# create list w/ 2 elements and index into it using numeric indicators of sex
 			sexes = []
@@ -433,7 +446,7 @@ class Strains(object):
 		Adds new strain to an ordered list which is used in make_phenotype_files()
 		and make_genotype_files().
 		'''
-		strain = line[Individual.strain_column_index]
+		strain = line[Individual.STRAIN_COLUMN_INDEX]
 		if strain not in self.strains:
 			self.strains[strain] = []
 			# set order of strains for use by make_phenotype_files() and make_genotype_files()
@@ -808,7 +821,7 @@ def make_phenotype_files( lines,  use_average_by_strain ):
 			make_genotype_files() to have columns that match those in
 			make_phenotype_files()
 	'''
-	Individual.row_names = (sanitize_list(lines[0][Individual.first_phenotype_column_index: ] +
+	Individual.row_names = (sanitize_list(lines[0][Individual.FIRST_PHENOTYPE_COLUMN_INDEX: ] +
 						[Global.RQTL_SEX_LABEL] + [Global.RQTL_ID_LABEL]) )
 
 	# determines if data will be read in and grouped by strain or kept separated by individual
@@ -831,7 +844,7 @@ def make_phenotype_files( lines,  use_average_by_strain ):
 	# use condition to write blank instead of data when appropriate
 	for row_index, row_name in enumerate(Individual.row_names):
 		# for file containing only the list of phenotypes, don't include sex or id labels:
-		if row_name not in Individual.special_rows:
+		if row_name not in Individual.SPECIAL_ROWS:
 			phenotype_list_builder.row.append(row_name)
 			phenotype_list_builder.append( phenotype_list_builder.row )
 		# for rqtl pheno input files:
@@ -847,10 +860,10 @@ def make_phenotype_files( lines,  use_average_by_strain ):
 					and a list of not-yet-averaged values for to-be-averaged individual'''
 					row_value = individual.rows[row_index]
 					write_row_value = ( pheno_file_builder.do_sexes_match(individual)
-						or row_name in Individual.special_rows
+						or row_name in Individual.SPECIAL_ROWS
 						and not row_value ==  Global.RQTL_MISSING_VALUE_LABEL )
 					if ( write_row_value ):
-						if use_average_by_strain and row_name not in Individual_averaged.special_rows:
+						if use_average_by_strain and row_name not in Individual_averaged.SPECIAL_ROWS:
 							# pass list of not-yet-averaged phenotype values
 							pheno_file_builder.row.append(Individual_averaged.average(row_value))
 						else:

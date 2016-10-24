@@ -1,7 +1,7 @@
 from src.makeRQTLInputs import *
-import unittest
+import unittest  # use @unittest.skip("some message") to skip a test
 import io
-import pdb;
+import pdb  # use pdb.set_trace() to start Python debugger at a certain line
 from testfixtures import TempDirectory, tempdir, compare	# easier setup/cleanup test output
 
 def examine_dir(dir):
@@ -49,7 +49,7 @@ OB-641,BXD27/TyJ,Female,17.51,3.4,21,196,0.031466593'''
 class geno_test(unittest.TestCase):
 	'''Set-up functionality required for test-classes in this file'''
 	def buildFiles(cls, use_average_by_strain):
-		# pdb.set_trace()
+		Geno_file_builder.reset()
 		dir = TempDirectory()
 		cls.dir = dir
 		Global.output_dir = dir.path	# set global variable in makeRQTLInputs
@@ -89,9 +89,9 @@ class geno_test(unittest.TestCase):
 		TempDirectory.cleanup_all()
 
 
-# @unittest.skip("not done")
 class test_make_genotype_files_average(geno_test):
-	''''''
+	'''Test that genotype file has 2 columns of identical genotype data for each
+	strain; the first for the females, and the second for the males'''
 	@classmethod
 	def setUpClass(cls):
 		super().buildFiles(cls, True)
@@ -112,8 +112,10 @@ rs29270490,X,66.918496,A,A,A,A,B,B
 		super().compareFiles(type(self), correct_output)
 
 
-# @unittest.skip("not done")
 class test_make_genotype_files_not_average(geno_test):
+	'''Test that genotype file contains x + y identical columns for each strain,
+	where x is the number of females in that strain, and y is the number of males
+	'''
 	@classmethod
 	def setUpClass(cls):
 		super().buildFiles(cls, False)

@@ -71,9 +71,9 @@ class test_averaged(unittest.TestCase):
 
 class test_not_averaged(unittest.TestCase):
 	def verify(self, individual_rows, correct_rows):
-		correct_rows = (correct_rows[Individual.first_phenotype_column_index:]+
-						[Global.SEX_LABEL_AS_NUMERIC[correct_rows[Individual.sex_column_index]]] +
-						[correct_rows[Individual.iid_column_index]])
+		correct_rows = (correct_rows[Individual.FIRST_PHENOTYPE_COLUMN_INDEX:]+
+						[Global.SEX_LABEL_AS_NUMERIC[correct_rows[Individual.SEX_COLUMN_INDEX]]] +
+						[correct_rows[Individual.IID_COLUMN_INDEX]])
 		for index, phenotype in enumerate(individual_rows):
 			self.assertEqual(individual_rows[index], correct_rows[index])
 
