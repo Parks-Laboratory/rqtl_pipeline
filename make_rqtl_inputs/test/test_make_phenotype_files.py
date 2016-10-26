@@ -1,4 +1,4 @@
-from src.makeRQTLInputs import *
+from src.make_rqtl_inputs import *
 import unittest
 import io
 from testfixtures import TempDirectory, tempdir, compare	# easier setup/cleanup test output

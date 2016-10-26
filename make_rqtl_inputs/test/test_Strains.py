@@ -1,4 +1,4 @@
-from src.makeRQTLInputs import *
+from src.make_rqtl_inputs import *
 import unittest
 
 female_sex_index = Global.SEX_LABEL_AS_NUMERIC[Global.FEMALE]

@@ -1,4 +1,4 @@
-from src.makeRQTLInputs import *
+from src.make_rqtl_inputs import *
 import unittest  # use @unittest.skip("some message") to skip a test
 import io
 import pdb  # use pdb.set_trace() to start Python debugger at a certain line

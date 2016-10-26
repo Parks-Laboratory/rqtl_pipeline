@@ -165,6 +165,8 @@ class Parameter():
 			Rounding_method.NO_ROUNDING: no rounding done, max digits kept (Default: 28 digits)'''
 	ROUNDING_METHOD = Rounding_method.MAX
 
+	# Unfinished. Idea is to separate markers into files based on the chromosome
+	# they belong to.
 	MAKE_CHROMOSOME_FILES = False	# Has bug where headings written but no genotyeps
 
 
