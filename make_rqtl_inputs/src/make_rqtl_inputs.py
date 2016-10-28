@@ -148,7 +148,7 @@ class Parameter():
 	MARKER_CHROMOSOME_COLUMN_NAME = 'snp_chr'
 	CENTIMORGAN_COLUMN_NAME = 'cM_est_mm10'
 	BP_POSITION_COLUMN_NAME = 'snp_bp_mm10'	# used to estimate centimorgans
-	MARKER_QUALITY_CONDITION = " WHERE flagged = 0 and quality = 'good'"  # ensures uniqueness of marker
+	MARKER_QUALITY_CONDITION = "WHERE flagged = 0 and quality = 'good'"  # ensures uniqueness of marker
 
 	# template-components for names of output files:
 	PHENO_FILENAME_PREFIXES = {Global.FEMALE:'female',Global.MALE:'male',Global.HETERO:'hetero'}	# change quoted parts only
@@ -689,7 +689,7 @@ def sort_markers( markers_raw, connection ):
 	# query for correct order of markers
 	query_for_marker_order = 'SELECT ' + Parameter.MARKER_IDENTIFIER_COLUMN_NAME +\
 						  ' FROM ' + Parameter.MARKER_ORDER_SOURCE_TABLE +\
-						  Parameter.MARKER_QUALITY_CONDITION +\
+						  ' ' + Parameter.MARKER_QUALITY_CONDITION +\
 						  ' ORDER BY ' +  Parameter.MARKER_CHROMOSOME_COLUMN_NAME +','+  Parameter.BP_POSITION_COLUMN_NAME
 
 	ordering = connection.execute(query_for_marker_order)
