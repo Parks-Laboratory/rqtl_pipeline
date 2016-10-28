@@ -10,9 +10,7 @@ import pyodbc
 import os
 import sys
 import time
-
-server_name = 'PARKSLAB'
-db = 'HMDP'
+import argparse
 
 # Warn if file already exists
 def warn_if_overwrite(output_fn):
@@ -20,20 +18,20 @@ def warn_if_overwrite(output_fn):
 		print('\tThe file \'' + output_fn + '\' already exists, and will be overwritten in 3 seconds (press Ctrl + C to prevent overwrite)')
 		time.sleep(3)
 
-def get_genotypes(strains, iids, output_fn):
+def get_genotypes(strains, iids, output_fn, server, db, table, idCol, chrCol, posCol):
 	# Uses 0 as genetic distance (centimorgans) for all snps
-	query_template = '''select snp_chr, rsID, 0 AS centimorgans, snp_bp_mm10, %s
-	from HMDP.dbo.genotype_calls_plink_format
-	order by snp_chr, snp_bp_mm10
-	'''
+	query_template = 'select ' + chrCol +','+ idCol +', 0 AS centimorgans,'+ posCol + ', %s ' +\
+	'from ' + db +'.'+ table +\
+	'order by ' + chrCol +','+ posCol
+
 	# warn_if_overwrite(output_fn)
 
 	# Create file for TPED
 	outfile = open(output_fn, 'w')
-	c = pyodbc.connect(SERVER=server_name,DATABASE=db,DRIVER='{SQL Server Native Client 11.0}',Trusted_Connection='Yes')
+	c = pyodbc.connect(SERVER=server,DATABASE=db,DRIVER='{SQL Server Native Client 11.0}',Trusted_Connection='Yes')
 	q = query_template % ', '.join(['[%s]' % x for x in strains])
 
-	print('\tQuerrying %s on SQL-server %s' % (db,server_name) )
+	print('\tQuerrying %s on SQL-server %s' % (db,server) )
 	t0 = time.clock()	# see how long query took
 	res = c.execute(q)
 	print('\tQuery completed in %.3f minutes' % ((time.clock()-t0)/60) )
@@ -81,28 +79,40 @@ def get_genotypes(strains, iids, output_fn):
 	print('\tDone writing to', output_fn)
 
 if __name__ == '__main__':
-	num_args = len(sys.argv)
-	if num_args < 2:
-		print('\tUsage:', os.path.basename(sys.argv[0]), '<strains_file>')
-	else:
-		for filename in sys.argv[1:]:
-			print ('\tProcessing', filename)
-			f = open(filename)
-			# strip() removes whitespace from beginning/end of linebuffer
-			# split() returns list of words in string, parsed using parameter char.
-			lines = [x.strip().split('\t') for x in f.readlines() if x.strip()]
-			f.close()
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-strains', required=True, action='append',
+		help='name of file w/ column for strains (ids column optional)')
+	parser.add_argument('-server', required=False, default='PARKSLAB',
+		help='name of SQL server containing genotype database')
+	parser.add_argument('-db', required=True,
+		help='name of SQL database containing genotype tables/views')
+	parser.add_argument('-table', required=True,
+		help='name of SQL table/view containing genotypes for strains')
+	parser.add_argument('-idCol', required=True,
+		help='name of column containing marker identifiers')
+	parser.add_argument('-chrCol', required=True,
+		help='name of column containing marker chromosome labels')
+	parser.add_argument('-posCol', required=True,
+		help='name of column containing marker genetic distance')
+	args = parser.parse_args()
+	for filename in args.strains:
+		print ('\tProcessing', filename)
+		f = open(filename)
+		# strip() removes whitespace from beginning/end of linebuffer
+		# split() returns list of words in string, parsed using parameter char.
+		lines = [x.strip().split('\t') for x in f.readlines() if x.strip()]
+		f.close()
 
-			try:
-				strains, iids = zip(*lines)
-			except ValueError:
-				print('\tError:',os.path.basename(sys.argv[1]), 'must have format <strain> TAB <IID>',)
-				print('\tThe IIDS will be auto-generated.')
-				iids = None
-				# Convert lines to strings
-				strains =[]
-				for x in lines:
-					strains.append(''.join(x))
-			output_fn = '%s.tped' % os.path.splitext(filename)[0]
-			get_genotypes(strains, iids, output_fn)
-			print ('\tDONE')
+		try:
+			strains, iids = zip(*lines)
+		except ValueError:
+			print('\tError:',os.path.basename(sys.argv[1]), 'must have format <strain> TAB <IID>',)
+			print('\tThe IIDS will be auto-generated.')
+			iids = None
+			# Convert lines to strings
+			strains =[]
+			for x in lines:
+				strains.append(''.join(x))
+		output_fn = '%s.tped' % os.path.splitext(filename)[0]
+		get_genotypes(strains, iids, output_fn, args.server, args.db, args.table, args.idCol, args.chrCol, args.posCol)
+		print ('\tDONE')

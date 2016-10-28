@@ -4,7 +4,7 @@ SETLOCAL
 :: Temporarily add locations to the search path
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 	:: specifiy location of rqtl_pipeline
-	PATH %PATH%;E:\rqtl_pipeline\
+	PATH %PATH%;E:\rqtl_pipeline\;E:\rqtl_pipeline\filter_markers;E:\rqtl_pipeline\make_rqtl_inputs
 
 	:: check that all requirements are installed
 
@@ -34,15 +34,8 @@ SETLOCAL
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :: Filter SNPs with PLINK
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-	SET "SERVER= PARKSLAB"
-	SET "DATABASE= HMDP"
-	SET "PLINK_GENOTYPE_VIEW= [dbo].[genotype_calls_plink_format]"
-	SET "MARKER_IDENTIFIER_COLUMN_NAME= rsID"
-	SET "MARKER_CHROMOSOME_COLUMN_NAME= snp_chr"
-	SET "BP_POSITION_COLUMN_NAME= snp_bp_mm10"
-
 	:: build input files for PLINK
-	make_plink_inputs.py -strains strains_list.txt %PLINK_GENOTYPE_VIEW%
+	make_plink_inputs.py -strains strains.txt -db HMDP -table [dbo].[genotype_calls_plink_format] -idCol rsID -chrCol snp_chr -posCol snp_bp_mm10
 
 	:: run PLINK
 	plink1 --tfile strains --make-bed --geno 0.1 --maf 0.05 --out %OUTPUT_DIR% --write-snplist
