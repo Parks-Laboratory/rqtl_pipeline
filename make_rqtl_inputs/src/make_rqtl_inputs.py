@@ -97,6 +97,8 @@ import os
 import sys
 import time				# for script-duration stats presented to user
 import string
+import argparse
+
 # for fixed-point representation:
 from decimal import (Decimal, Context, InvalidOperation, ROUND_HALF_EVEN,
 	getcontext, setcontext)
@@ -138,17 +140,6 @@ class Rounding_method(Enum):
 ##		ROUNDING_METHOD
 ################################################################################
 class Parameter():
-	SQL_SERVER_NAME = 'PARKSLAB'
-	DATABASE = 'HMDP'
-	GENOTYPE_SOURCE_TABLE = '[dbo].[rqtl_csvsr_geno_format]'	# table or view name that provides data
-	MARKER_ORDER_SOURCE_TABLE = '[dbo].[genotypes]'			# table that provides order of markers
-
-	# columns used in query, must match column names in <Parameter.GENOTYPE_SOURCE_TABLE> and/or Parameter.MARKER_ORDER_SOURCE_TABLE
-	MARKER_IDENTIFIER_COLUMN_NAME = 'rsID'
-	MARKER_CHROMOSOME_COLUMN_NAME = 'snp_chr'
-	CENTIMORGAN_COLUMN_NAME = 'cM_est_mm10'
-	BP_POSITION_COLUMN_NAME = 'snp_bp_mm10'	# used to estimate centimorgans
-	MARKER_QUALITY_CONDITION = "WHERE flagged = 0 and quality = 'good'"  # ensures uniqueness of marker
 
 	# template-components for names of output files:
 	PHENO_FILENAME_PREFIXES = {Global.FEMALE:'female',Global.MALE:'male',Global.HETERO:'hetero'}	# change quoted parts only
@@ -169,6 +160,20 @@ class Parameter():
 	# they belong to.
 	MAKE_CHROMOSOME_FILES = False	# Has bug where headings written but no genotyeps
 
+	# Specified by command line arguments
+	SQL_SERVER_NAME = None
+	DATABASE = None
+	GENOTYPE_SOURCE_TABLE = None
+	MARKER_ORDER_SOURCE_TABLE = None
+
+	MARKER_IDENTIFIER_COLUMN_NAME = None
+	MARKER_CHROMOSOME_COLUMN_NAME = None
+	CENTIMORGAN_COLUMN_NAME = None
+
+	MARKER_ORDER_MARKER_IDENTIFIER_COLUMN_NAME = None
+	MARKER_ORDER_MARKER_CHROMOSOME_COLUMN_NAME = None
+	MARKER_ORDER_BP_POSITION_COLUMN_NAME = None
+	MARKER_ORDER_MARKER_QUALITY_CONDITION = None
 
 ################################################################################
 ##   Main program:
@@ -687,10 +692,11 @@ def sort_markers( markers_raw, connection ):
 	'''
 
 	# query for correct order of markers
-	query_for_marker_order = 'SELECT ' + Parameter.MARKER_IDENTIFIER_COLUMN_NAME +\
+	query_for_marker_order = 'SELECT ' + Parameter.MARKER_ORDER_MARKER_IDENTIFIER_COLUMN_NAME +\
 						  ' FROM ' + Parameter.MARKER_ORDER_SOURCE_TABLE +\
-						  ' ' + Parameter.MARKER_QUALITY_CONDITION +\
-						  ' ORDER BY ' +  Parameter.MARKER_CHROMOSOME_COLUMN_NAME +','+  Parameter.BP_POSITION_COLUMN_NAME
+						  ' ' + Parameter.MARKER_ORDER_MARKER_QUALITY_CONDITION +\
+						  ' ORDER BY ' +  Parameter.MARKER_ORDER_MARKER_CHROMOSOME_COLUMN_NAME +\
+						  ',' +  Parameter.MARKER_ORDER_BP_POSITION_COLUMN_NAME
 
 	ordering = connection.execute(query_for_marker_order)
 
@@ -760,7 +766,7 @@ def make_genotype_files( data_by_strain, markers_raw ):
 	column_labels = None
 	next_row_to_get = 0
 	linebuffer = []
-	while next_row_to_get < num_markers :
+	while next_row_to_get < num_markers:
 		# used to select subset of markers to get in this query
 		max_rows_to_get = next_row_to_get + Global.QUERY_BATCH_SIZE
 		if max_rows_to_get > num_markers:
@@ -902,43 +908,97 @@ def make_phenotype_files( lines,  use_average_by_strain ):
 
 if __name__ == '__main__':
 	'''Entry point for program, reads input files, calls main functions'''
-	num_args = len(sys.argv)
-	if num_args < 4:
-		# Display help message
-		sys.exit('Usage: ' + os.path.basename( sys.argv[0] )
-		+ ' <csv with phenotype data>  <file with list of markers>  <output dir.>  [-average]')
-	else:
-		Global.output_dir = sys.argv[3]
-		if( not os.path.isdir(Global.output_dir) ):
-			os.mkdir(Global.output_dir)
 
-		# Process input for pheno file:
-		pheno_input_path = os.path.normpath( sys.argv[1] )
-		pheno_file = open(pheno_input_path)
+	parser = argparse.ArgumentParser()
+	# General arguments
+	parser.add_argument('-out', required=False, default='out_'+''.join(str(x) for x in time.gmtime()),
+		help='name of SQL server containing genotype database')
 
-		use_average_by_strain = False
-		if num_args == 5 and sys.argv[4] == '-average':
-			use_average_by_strain = True
 
-		pheno_lines = [line.strip().split(',') for line in pheno_file]
-		t0 = time.clock()	# see how long query took
-		# Build phenotype files
-		phenotype_data_by_strain = make_phenotype_files( pheno_lines, use_average_by_strain )
-		print( 'Pheno files built in %.2f minutes' % ((time.clock()-t0)/60) )
+	# Arguments for building phenotype file
 
-		# Process input for geno file(s):
-		geno_input_path = os.path.normpath( sys.argv[2] )
-		geno_file = open(geno_input_path)
 
-		geno_lines = [line.strip().split('\t') for line in geno_file if line.strip()]
-		geno_file.close()
+	# Arguments for building genotype file
+	parser.add_argument('-server', required=False, default='PARKSLAB',
+		help='name of SQL server containing genotype database')
+	parser.add_argument('-db', required=True,
+		help='name of SQL database containing genotype tables/views')
+	parser.add_argument('-table', required=True,
+		help='name of SQL table/view containing genotypes for strains \
+		in csvsr format')
+	parser.add_argument('-mkTable', required=True,
+	help='name of SQL table/view containing genotype marker annotations \
+	for	determining true order of markers')
 
-		# Convert marker lines to strings
-		markers = set()
-		for line in geno_lines:
-			markers.add(Global.EMPTY_STRING.join(line))
+	parser.add_argument('-idCol', required=False, default='rsID',
+		help='name of csvsr-table column containing marker identifiers')
+	parser.add_argument('-chrCol', required=False, default='snp_chr',
+		help='name of csvsr-table column containing marker chromosome labels')
+	parser.add_argument('-cMCol', required=False, default='cM_est_mm10',
+		help='name of csvsr-table column containing marker genetic distance')
 
-		t0 = time.clock()	# see how long query took
-		# Build genotype file(s)
-		make_genotype_files( phenotype_data_by_strain, markers )
-		print( 'Geno file built in %.2f minutes' % ((time.clock()-t0)/60) )
+	parser.add_argument('-mkIdCol', required=False, default='rsID',
+		help='name of column containing marker identifiers \
+		for determining true order of markers')
+	parser.add_argument('-mkChrCol', required=False, default='snp_chr',
+		help='name of column containing marker chromosome labels \
+		for determining true order of markers')
+	parser.add_argument('-mkPosCol', required=False, default='snp_bp_mm10',
+		help='name of column containing marker genetic distance for \
+		determining true order of markers')
+	parser.add_argument('-mkQuality', required=False, default="WHERE flagged = 0 and quality = 'good'",
+		help='name of column containing condition for testing marker quality for \
+		determining true order of markers')
+
+	args = parser.parse_args()
+
+	# Set global variables based on command-line arguments
+	Parameter.SQL_SERVER_NAME = args.server
+	Parameter.DATABASE = args.db
+	Parameter.GENOTYPE_SOURCE_TABLE = args.csvsrTable
+	Parameter.MARKER_ORDER_SOURCE_TABLE = args.mkTable
+
+	Parameter.MARKER_IDENTIFIER_COLUMN_NAME = args.idCol
+	Parameter.MARKER_CHROMOSOME_COLUMN_NAME = args.chrCol
+	Parameter.CENTIMORGAN_COLUMN_NAME = args.cMCol
+
+	Parameter.MARKER_ORDER_MARKER_IDENTIFIER_COLUMN_NAME = args.mkIdCol
+	Parameter.MARKER_ORDER_MARKER_CHROMOSOME_COLUMN_NAME = args.mkChrCol
+	Parameter.MARKER_ORDER_BP_POSITION_COLUMN_NAME = args.mkPosCol
+	Parameter.MARKER_ORDER_MARKER_QUALITY_CONDITION = args.mkQuality
+
+
+	Global.output_dir = args.out
+	if( not os.path.isdir(Global.output_dir) ):
+		os.mkdir(Global.output_dir)
+
+	# Process input for pheno file:
+	pheno_input_path = os.path.normpath( sys.argv[1] )
+	pheno_file = open(pheno_input_path)
+
+	use_average_by_strain = False
+	if num_args == 5 and sys.argv[4] == '-average':
+		use_average_by_strain = True
+
+	pheno_lines = [line.strip().split(',') for line in pheno_file]
+	t0 = time.clock()	# see how long query took
+	# Build phenotype files
+	phenotype_data_by_strain = make_phenotype_files( pheno_lines, use_average_by_strain )
+	print( 'Pheno files built in %.2f minutes' % ((time.clock()-t0)/60) )
+
+	# Process input for geno file(s):
+	geno_input_path = os.path.normpath( sys.argv[2] )
+	geno_file = open(geno_input_path)
+
+	geno_lines = [line.strip().split('\t') for line in geno_file if line.strip()]
+	geno_file.close()
+
+	# Convert marker lines to strings
+	markers = set()
+	for line in geno_lines:
+		markers.add(Global.EMPTY_STRING.join(line))
+
+	t0 = time.clock()	# see how long query took
+	# Build genotype file(s)
+	make_genotype_files( phenotype_data_by_strain, markers )
+	print( 'Geno file built in %.2f minutes' % ((time.clock()-t0)/60) )
