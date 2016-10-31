@@ -87,12 +87,13 @@ if __name__ == '__main__':
 	parser.add_argument('-db', required=True,
 		help='name of SQL database containing genotype tables/views')
 	parser.add_argument('-table', required=True,
-		help='name of SQL table/view containing genotypes for strains')
-	parser.add_argument('-idCol', required=True,
+		help='name of SQL table/view containing genotypes for strains \
+		in PLINK format')
+	parser.add_argument('-idCol', required=False, default='rsID',
 		help='name of column containing marker identifiers')
-	parser.add_argument('-chrCol', required=True,
+	parser.add_argument('-chrCol', required=False, default='snp_chr',
 		help='name of column containing marker chromosome labels')
-	parser.add_argument('-posCol', required=True,
+	parser.add_argument('-posCol', required=False, default='snp_bp_mm10',
 		help='name of column containing marker genetic distance')
 	args = parser.parse_args()
 	for filename in args.strains:
