@@ -17,6 +17,10 @@ SETLOCAL
 	:: R/QTL-related
 	SET USE_AVERAGE_BY_STRAIN=True
 
+	:: batch or interactive mapping?
+	:: (must make local copy of make_rdata.r and edit the mapping jobs)
+	SET BATCH_MAPPING=?
+
 	cls
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -54,3 +58,12 @@ SETLOCAL
 	SET "MARKER_QUALITY_CONDITION=  WHERE flagged = 0 and quality = good"
 
 	make_rqtl_inputs -out %OUTPUT_DIR% -pickle %STRAINS.pkl% -view %RQTL_GENOTYPE_VIEW%
+
+
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: Make inputs for R/QTL Batch Mapping
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+	:: Perform these actions if BATCH_MAPPING is True
+
+	:: Build rdata file using R CMD Batch
