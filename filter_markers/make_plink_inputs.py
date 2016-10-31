@@ -47,7 +47,7 @@ def get_genotypes(strains, iids, output_fn, server, db, table, idCol, chrCol, po
 			colnames = [x.replace('/', '.').replace(' ', '.') for x in colnames]
 
 			tfam_output_fn = output_fn.replace('.tped', '.tfam')
-			warn_if_overwrite(tfam_output_fn)
+			# warn_if_overwrite(tfam_output_fn)
 			tfam_outfile = open(tfam_output_fn, 'w')
 			print('\tWriting to', tfam_output_fn)
 			# accesses list of strains by referring to table's column names
