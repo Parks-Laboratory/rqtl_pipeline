@@ -912,13 +912,29 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	# General arguments
 	parser.add_argument('-out', required=False, default='out_'+''.join(str(x) for x in time.gmtime()),
-		help='name of SQL server containing genotype database')
+		help='name of new/existing directory in which to store results')
+	task = parser.add_mutually_exclusive_group()
+	task.add_argument('-phenoOnly', required=False, action='store_true',
+		help='build R/QTL phenotype file in csvsr format, and write python data \
+		to file so that the genotype file can be made later if desired')
+	task.add_argument('-genoOnly', required=False, action='store_true',
+		help='build R/QTL genotype file in csvsr format. Assumes that \
+		it will be able to access python data from previous run, perhaps \
+		where -phenoOnly was set')
+	parser.add_argument('-avg', required=False, action='store_true',
+		help='If used, all females of a given strain will be averaged together \
+		for each trait (and likewise for males). Otherwise, all males and \
+		females remain as separate individuals.')
 
 
 	# Arguments for building phenotype file
+	parser.add_argument('-phenoFile', required=True,
+		help='path to csv file containing phenotype data for each individual')
 
 
 	# Arguments for building genotype file
+	parser.add_argument('-mkFile', required=True,
+		help='path to file containing list of marker ids (one id on each line)')
 	parser.add_argument('-server', required=False, default='PARKSLAB',
 		help='name of SQL server containing genotype database')
 	parser.add_argument('-db', required=True,
@@ -927,8 +943,8 @@ if __name__ == '__main__':
 		help='name of SQL table/view containing genotypes for strains \
 		in csvsr format')
 	parser.add_argument('-mkTable', required=True,
-	help='name of SQL table/view containing genotype marker annotations \
-	for	determining true order of markers')
+		help='name of SQL table/view containing genotype marker annotations \
+		for	determining true order of markers')
 
 	parser.add_argument('-idCol', required=False, default='rsID',
 		help='name of csvsr-table column containing marker identifiers')
@@ -938,16 +954,16 @@ if __name__ == '__main__':
 		help='name of csvsr-table column containing marker genetic distance')
 
 	parser.add_argument('-mkIdCol', required=False, default='rsID',
-		help='name of column containing marker identifiers \
+		help='name of table column containing marker identifiers \
 		for determining true order of markers')
 	parser.add_argument('-mkChrCol', required=False, default='snp_chr',
-		help='name of column containing marker chromosome labels \
+		help='name of table column containing marker chromosome labels \
 		for determining true order of markers')
 	parser.add_argument('-mkPosCol', required=False, default='snp_bp_mm10',
-		help='name of column containing marker genetic distance for \
+		help='name of table column containing marker genetic distance for \
 		determining true order of markers')
 	parser.add_argument('-mkQuality', required=False, default="WHERE flagged = 0 and quality = 'good'",
-		help='name of column containing condition for testing marker quality for \
+		help='name of table column containing condition for testing marker quality for \
 		determining true order of markers')
 
 	args = parser.parse_args()
@@ -972,33 +988,34 @@ if __name__ == '__main__':
 	if( not os.path.isdir(Global.output_dir) ):
 		os.mkdir(Global.output_dir)
 
-	# Process input for pheno file:
-	pheno_input_path = os.path.normpath( sys.argv[1] )
-	pheno_file = open(pheno_input_path)
+	use_average_by_strain = args.avg
 
-	use_average_by_strain = False
-	if num_args == 5 and sys.argv[4] == '-average':
-		use_average_by_strain = True
+	if not args.genoOnly:
+		# Process input for pheno file:
+		pheno_input_path = os.path.normpath( args.phenoFile )
+		pheno_file = open(pheno_input_path)
 
-	pheno_lines = [line.strip().split(',') for line in pheno_file]
-	t0 = time.clock()	# see how long query took
-	# Build phenotype files
-	phenotype_data_by_strain = make_phenotype_files( pheno_lines, use_average_by_strain )
-	print( 'Pheno files built in %.2f minutes' % ((time.clock()-t0)/60) )
 
-	# Process input for geno file(s):
-	geno_input_path = os.path.normpath( sys.argv[2] )
-	geno_file = open(geno_input_path)
+		pheno_lines = [line.strip().split(',') for line in pheno_file]
+		t0 = time.clock()	# see how long query took
+		# Build phenotype files
+		phenotype_data_by_strain = make_phenotype_files( pheno_lines, use_average_by_strain )
+		print( 'Pheno files built in %.2f minutes' % ((time.clock()-t0)/60) )
 
-	geno_lines = [line.strip().split('\t') for line in geno_file if line.strip()]
-	geno_file.close()
+	if not args.phenoOnly:
+		# Process input for geno file(s):
+		geno_input_path = os.path.normpath( args.mkFile )
+		geno_file = open(geno_input_path)
 
-	# Convert marker lines to strings
-	markers = set()
-	for line in geno_lines:
-		markers.add(Global.EMPTY_STRING.join(line))
+		geno_lines = [line.strip().split('\t') for line in geno_file if line.strip()]
+		geno_file.close()
 
-	t0 = time.clock()	# see how long query took
-	# Build genotype file(s)
-	make_genotype_files( phenotype_data_by_strain, markers )
-	print( 'Geno file built in %.2f minutes' % ((time.clock()-t0)/60) )
+		# Convert marker lines to strings
+		markers = set()
+		for line in geno_lines:
+			markers.add(Global.EMPTY_STRING.join(line))
+
+		t0 = time.clock()	# see how long query took
+		# Build genotype file(s)
+		make_genotype_files( phenotype_data_by_strain, markers )
+		print( 'Geno file built in %.2f minutes' % ((time.clock()-t0)/60) )
