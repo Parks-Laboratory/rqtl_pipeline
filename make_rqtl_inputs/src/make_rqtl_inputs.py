@@ -161,6 +161,7 @@ class Parameter():
 	MAKE_CHROMOSOME_FILES = False	# Has bug where headings written but no genotyeps
 
 	# Specified by command line arguments
+	USE_AVERAGE_BY_STRAIN = None
 	SQL_SERVER_NAME = None
 	DATABASE = None
 	GENOTYPE_SOURCE_TABLE = None
@@ -843,14 +844,21 @@ def make_phenotype_files( lines ):
 						[Global.RQTL_SEX_LABEL] + [Global.RQTL_ID_LABEL]) )
 
 	# determines if data will be read in and grouped by strain or kept separated by individual
-	data_by_strain = Strains(Parameter.use_average_by_strain)
+	data_by_strain = Strains(Parameter.USE_AVERAGE_BY_STRAIN)
 	# store iid, sex, strain, and phenotype values for each strain in its own object
 	for line in lines[1: ]:
 		data_by_strain.append(line)	# also for expanding strain in make_genotype_files()
 
+	strains_list_builder = Pheno_file_builder('strains', 'list.txt')
+	strains_list_builder.open()
+	strains_list_builder.append(data_by_strain.ordered_strains)
+
+
 	# open files for writing:
 	phenotype_list_builder = Pheno_file_builder('phenotypes', 'list.txt')
 	phenotype_list_builder.open()	# file w/ just the list of sanitized phenotypes
+
+
 	sexes = [Global.FEMALE, Global.MALE, Global.HETERO]
 	pheno_file_builders = []
 	for sex in sexes:
@@ -881,7 +889,7 @@ def make_phenotype_files( lines ):
 						or row_name in Individual.SPECIAL_ROWS
 						and not row_value ==  Global.RQTL_MISSING_VALUE_LABEL )
 					if ( write_row_value ):
-						if Parameter.use_average_by_strain and row_name not in Individual_averaged.SPECIAL_ROWS:
+						if Parameter.USE_AVERAGE_BY_STRAIN and row_name not in Individual_averaged.SPECIAL_ROWS:
 							# pass list of not-yet-averaged phenotype values
 							pheno_file_builder.row.append(Individual_averaged.average(row_value))
 						else:
@@ -896,7 +904,7 @@ def make_phenotype_files( lines ):
 						pheno_file_builder.append( pheno_file_builder.row )
 
 	# write file and close
-	for pheno_file_builder in pheno_file_builders + [phenotype_list_builder]:
+	for pheno_file_builder in pheno_file_builders + [phenotype_list_builder] + [strains_list_builder]:
 		pheno_file_builder.write_linebuffer()
 		pheno_file_builder.file.close()
 
@@ -907,17 +915,14 @@ if __name__ == '__main__':
 	'''Entry point for program, reads input files, calls main functions'''
 
 	parser = argparse.ArgumentParser()
+	subparsers = parser.add_subparsers(dest='subparser_name')
+	pheno_parser = subparsers.add_parser('pheno')
+	geno_parser = subparsers.add_parser('geno')
+
 	# General arguments
 	parser.add_argument('-out', required=False, default='out_'+''.join(str(x) for x in time.gmtime()),
 		help='name of new/existing directory in which to store results')
 	task = parser.add_mutually_exclusive_group()
-	task.add_argument('-phenoOnly', required=False, action='store_true',
-		help='build R/QTL phenotype file in csvsr format, and write python data \
-		to file so that the genotype file can be made later if desired')
-	task.add_argument('-genoOnly', required=False, action='store_true',
-		help='build R/QTL genotype file in csvsr format. Assumes that \
-		it will be able to access python data from previous run, perhaps \
-		where -phenoOnly was set')
 	parser.add_argument('-avg', required=False, action='store_true',
 		help='If used, all females of a given strain will be averaged together \
 		for each trait (and likewise for males). Otherwise, all males and \
@@ -925,69 +930,61 @@ if __name__ == '__main__':
 
 
 	# Arguments for building phenotype file
-	parser.add_argument('-phenoFile', required=True,
+	pheno_parser.add_argument('-phenoFile', required=True,
 		help='path to csv file containing phenotype data for each individual')
 
 
 	# Arguments for building genotype file
-	parser.add_argument('-mkFile', required=True,
+	geno_parser.add_argument('-mkFile', required=True,
 		help='path to file containing list of marker ids (one id on each line)')
-	parser.add_argument('-server', required=False, default='PARKSLAB',
+	geno_parser.add_argument('-server', required=False, default='PARKSLAB',
 		help='name of SQL server containing genotype database')
-	parser.add_argument('-db', required=True,
+	geno_parser.add_argument('-db', required=True,
 		help='name of SQL database containing genotype tables/views')
-	parser.add_argument('-table', required=True,
+	geno_parser.add_argument('-table', required=True,
 		help='name of SQL table/view containing genotypes for strains \
 		in csvsr format')
-	parser.add_argument('-mkTable', required=True,
+	geno_parser.add_argument('-mkTable', required=True,
 		help='name of SQL table/view containing genotype marker annotations \
 		for	determining true order of markers')
 
-	parser.add_argument('-idCol', required=False, default='rsID',
+	geno_parser.add_argument('-idCol', required=False, default='rsID',
 		help='name of csvsr-table column containing marker identifiers')
-	parser.add_argument('-chrCol', required=False, default='snp_chr',
+	geno_parser.add_argument('-chrCol', required=False, default='snp_chr',
 		help='name of csvsr-table column containing marker chromosome labels')
-	parser.add_argument('-cMCol', required=False, default='cM_est_mm10',
+	geno_parser.add_argument('-cMCol', required=False, default='cM_est_mm10',
 		help='name of csvsr-table column containing marker genetic distance')
 
-	parser.add_argument('-mkIdCol', required=False, default='rsID',
+	geno_parser.add_argument('-mkIdCol', required=False, default='rsID',
 		help='name of table column containing marker identifiers \
 		for determining true order of markers')
-	parser.add_argument('-mkChrCol', required=False, default='snp_chr',
+	geno_parser.add_argument('-mkChrCol', required=False, default='snp_chr',
 		help='name of table column containing marker chromosome labels \
 		for determining true order of markers')
-	parser.add_argument('-mkPosCol', required=False, default='snp_bp_mm10',
+	geno_parser.add_argument('-mkPosCol', required=False, default='snp_bp_mm10',
 		help='name of table column containing marker genetic distance for \
 		determining true order of markers')
-	parser.add_argument('-mkQuality', required=False, default="WHERE flagged = 0 and quality = 'good'",
+	geno_parser.add_argument('-mkQuality', required=False, default="WHERE flagged = 0 and quality = 'good'",
 		help='name of table column containing condition for testing marker quality for \
 		determining true order of markers')
 
-	args = parser.parse_args()
-
-	# Set global variables based on command-line arguments
-	Parameter.SQL_SERVER_NAME = args.server
-	Parameter.DATABASE = args.db
-	Parameter.GENOTYPE_SOURCE_TABLE = args.csvsrTable
-	Parameter.MARKER_ORDER_SOURCE_TABLE = args.mkTable
-
-	Parameter.MARKER_IDENTIFIER_COLUMN_NAME = args.idCol
-	Parameter.MARKER_CHROMOSOME_COLUMN_NAME = args.chrCol
-	Parameter.CENTIMORGAN_COLUMN_NAME = args.cMCol
-
-	Parameter.MARKER_ORDER_MARKER_IDENTIFIER_COLUMN_NAME = args.mkIdCol
-	Parameter.MARKER_ORDER_MARKER_CHROMOSOME_COLUMN_NAME = args.mkChrCol
-	Parameter.MARKER_ORDER_BP_POSITION_COLUMN_NAME = args.mkPosCol
-	Parameter.MARKER_ORDER_MARKER_QUALITY_CONDITION = args.mkQuality
-
+	# parse args and figure out whether geno files and/or pheno files should be built
+	subparsers_used = []
+	args, rest = parser.parse_known_args()
+	subparsers_used.append(args.subparser_name)
+	args = parser.parse_args(rest, namespace=args)
+	subparsers_used.append(args.subparser_name)
 
 	Global.output_dir = args.out
 	if( not os.path.isdir(Global.output_dir) ):
 		os.mkdir(Global.output_dir)
 
-	use_average_by_strain = args.avg
+	Parameter.USE_AVERAGE_BY_STRAIN = args.avg
 
-	if not args.genoOnly:
+	if 'pheno' in subparsers_used:
+		'''Build R/QTL phenotype file in csvsr format, and write python data \
+		to file so that the genotype file can be made later if desired'''
+
 		# Process input for pheno file:
 		pheno_input_path = os.path.normpath( args.phenoFile )
 		pheno_file = open(pheno_input_path)
@@ -996,10 +993,29 @@ if __name__ == '__main__':
 		pheno_lines = [line.strip().split(',') for line in pheno_file]
 		t0 = time.clock()	# see how long query took
 		# Build phenotype files
-		phenotype_data_by_strain = make_phenotype_files( pheno_lines, use_average_by_strain )
+		phenotype_data_by_strain = make_phenotype_files( pheno_lines )
 		print( 'Pheno files built in %.2f minutes' % ((time.clock()-t0)/60) )
 
-	if not args.phenoOnly:
+	if 'geno' in subparsers_used:
+		'''Build R/QTL genotype file in csvsr format. Assumes that \
+		it will be able to access python data from previous run, perhaps \
+		where -phenoOnly was set'''
+
+		# Set global variables based on command-line arguments
+		Parameter.SQL_SERVER_NAME = args.server
+		Parameter.DATABASE = args.db
+		Parameter.GENOTYPE_SOURCE_TABLE = args.table
+		Parameter.MARKER_ORDER_SOURCE_TABLE = args.mkTable
+
+		Parameter.MARKER_IDENTIFIER_COLUMN_NAME = args.idCol
+		Parameter.MARKER_CHROMOSOME_COLUMN_NAME = args.chrCol
+		Parameter.CENTIMORGAN_COLUMN_NAME = args.cMCol
+
+		Parameter.MARKER_ORDER_MARKER_IDENTIFIER_COLUMN_NAME = args.mkIdCol
+		Parameter.MARKER_ORDER_MARKER_CHROMOSOME_COLUMN_NAME = args.mkChrCol
+		Parameter.MARKER_ORDER_BP_POSITION_COLUMN_NAME = args.mkPosCol
+		Parameter.MARKER_ORDER_MARKER_QUALITY_CONDITION = args.mkQuality
+
 		# Process input for geno file(s):
 		geno_input_path = os.path.normpath( args.mkFile )
 		geno_file = open(geno_input_path)
