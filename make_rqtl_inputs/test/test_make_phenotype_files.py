@@ -42,6 +42,8 @@ def examine_dir(dir):
 class pheno_test(unittest.TestCase):
 	'''Set-up functionality required for test-classes in this file'''
 	def buildFiles(cls, use_average_by_strain):
+		# Simulate passing arguments via command-line
+		Parameter.use_average_by_strain = use_average_by_strain
 		dir = TempDirectory()
 		cls.dir = dir
 
@@ -50,7 +52,7 @@ class pheno_test(unittest.TestCase):
 		pheno_lines = [line.strip().split(',') for line in input]
 		input.close()
 
-		make_phenotype_files(pheno_lines, use_average_by_strain)
+		make_phenotype_files(pheno_lines)
 
 	def compareFiles(self, cls, fileType, correct_output):
 		correct_output = correct_output.replace('\n', os.linesep)

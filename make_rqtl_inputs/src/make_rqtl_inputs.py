@@ -826,15 +826,12 @@ def make_genotype_files( data_by_strain, markers_raw ):
 	connection.close()
 
 
-def make_phenotype_files( lines,  use_average_by_strain ):
+def make_phenotype_files( lines ):
 	'''Main function for building phenotype files
 
 	Args
 		lines (list): Lines of strings where each line corresponds to a line from
 			the source phenotype file
-		use_average_by_strain (Boolean): If True, all females of a given strain
-			will be averaged together for each trait (same for males). If False,
-			all males and females remain separate.
 
 	Returns
 		data_by_strain (Strains): Object which stores information about the order
@@ -846,7 +843,7 @@ def make_phenotype_files( lines,  use_average_by_strain ):
 						[Global.RQTL_SEX_LABEL] + [Global.RQTL_ID_LABEL]) )
 
 	# determines if data will be read in and grouped by strain or kept separated by individual
-	data_by_strain = Strains(use_average_by_strain)
+	data_by_strain = Strains(Parameter.use_average_by_strain)
 	# store iid, sex, strain, and phenotype values for each strain in its own object
 	for line in lines[1: ]:
 		data_by_strain.append(line)	# also for expanding strain in make_genotype_files()
@@ -884,7 +881,7 @@ def make_phenotype_files( lines,  use_average_by_strain ):
 						or row_name in Individual.SPECIAL_ROWS
 						and not row_value ==  Global.RQTL_MISSING_VALUE_LABEL )
 					if ( write_row_value ):
-						if use_average_by_strain and row_name not in Individual_averaged.SPECIAL_ROWS:
+						if Parameter.use_average_by_strain and row_name not in Individual_averaged.SPECIAL_ROWS:
 							# pass list of not-yet-averaged phenotype values
 							pheno_file_builder.row.append(Individual_averaged.average(row_value))
 						else:

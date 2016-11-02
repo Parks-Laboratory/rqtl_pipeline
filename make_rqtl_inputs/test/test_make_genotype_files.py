@@ -49,6 +49,22 @@ OB-641,BXD27/TyJ,Female,17.51,3.4,21,196,0.031466593'''
 class geno_test(unittest.TestCase):
 	'''Set-up functionality required for test-classes in this file'''
 	def buildFiles(cls, use_average_by_strain):
+		# Simulate passing arguments via command-line
+		Parameter.use_average_by_strain = use_average_by_strain
+		Parameter.SQL_SERVER_NAME = 'PARKSLAB'
+		Parameter.DATABASE = 'HMDP'
+		Parameter.GENOTYPE_SOURCE_TABLE = '[dbo].[rqtl_csvsr_geno_format]'
+		Parameter.MARKER_ORDER_SOURCE_TABLE = '[dbo].[genotypes]'
+
+		Parameter.MARKER_IDENTIFIER_COLUMN_NAME = 'rsID'
+		Parameter.MARKER_CHROMOSOME_COLUMN_NAME = 'snp_chr'
+		Parameter.CENTIMORGAN_COLUMN_NAME = 'cM_est_mm10'
+
+		Parameter.MARKER_ORDER_MARKER_IDENTIFIER_COLUMN_NAME = 'rsID'
+		Parameter.MARKER_ORDER_MARKER_CHROMOSOME_COLUMN_NAME = 'snp_chr'
+		Parameter.MARKER_ORDER_BP_POSITION_COLUMN_NAME = 'snp_bp_mm10'
+		Parameter.MARKER_ORDER_MARKER_QUALITY_CONDITION = "WHERE flagged = 0 and quality = 'good'"
+
 		Geno_file_builder.reset()
 		dir = TempDirectory()
 		cls.dir = dir
@@ -58,7 +74,7 @@ class geno_test(unittest.TestCase):
 		pheno_input = io.StringIO(pheno_file)
 		pheno_lines = [line.strip().split(',') for line in pheno_input]
 		pheno_input.close()
-		phenotype_data_by_strain = make_phenotype_files(pheno_lines, use_average_by_strain)
+		phenotype_data_by_strain = make_phenotype_files(pheno_lines)
 
 		geno_input = io.StringIO(geno_file)
 		geno_lines = [line.strip().split('\t') for line in geno_input if line.strip()]
