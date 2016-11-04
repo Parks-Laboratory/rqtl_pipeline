@@ -851,7 +851,9 @@ def make_phenotype_files( lines ):
 
 	strains_list_builder = Pheno_file_builder('strains', 'list.txt')
 	strains_list_builder.open()
-	strains_list_builder.append(data_by_strain.ordered_strains)
+	for strain in data_by_strain.ordered_strains:
+		strains_list_builder.row.append(str(strain))
+		strains_list_builder.append(strains_list_builder.row)
 
 
 	# open files for writing:
@@ -922,12 +924,10 @@ if __name__ == '__main__':
 	# General arguments
 	parser.add_argument('-out', required=False, default='out_'+''.join(str(x) for x in time.gmtime()),
 		help='name of new/existing directory in which to store results')
-	task = parser.add_mutually_exclusive_group()
 	parser.add_argument('-avg', required=False, action='store_true',
 		help='If used, all females of a given strain will be averaged together \
 		for each trait (and likewise for males). Otherwise, all males and \
 		females remain as separate individuals.')
-
 
 	# Arguments for building phenotype file
 	pheno_parser.add_argument('-phenoFile', required=True,

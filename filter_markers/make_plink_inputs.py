@@ -18,7 +18,7 @@ def warn_if_overwrite(output_fn):
 		print('\tThe file \'' + output_fn + '\' already exists, and will be overwritten in 3 seconds (press Ctrl + C to prevent overwrite)')
 		time.sleep(3)
 
-def get_genotypes(strains, iids, output_fn, server, db, table, idCol, chrCol, posCol):
+def get_genotypes(strains, iids, output_fn, output_dir, server, db, table, idCol, chrCol, posCol):
 	# Uses 0 as genetic distance (centimorgans) for all snps
 	query_template = 'select ' + chrCol +','+ idCol +', 0 AS centimorgans,'+ posCol + ', %s ' +\
 	'from ' + db +'.'+ table +\
@@ -46,10 +46,10 @@ def get_genotypes(strains, iids, output_fn, server, db, table, idCol, chrCol, po
 			colnames = [t[0] for t in row.cursor_description]
 			colnames = [x.replace('/', '.').replace(' ', '.') for x in colnames]
 
-			tfam_output_fn = output_fn.replace('.tped', '.tfam')
-			# warn_if_overwrite(tfam_output_fn)
-			tfam_outfile = open(tfam_output_fn, 'w')
-			print('\tWriting to', tfam_output_fn)
+			tfam_output_path = output_fn.replace('.tped', '.tfam')
+			# warn_if_overwrite(tfam_output_path)
+			tfam_outfile = open(os.path.join(output_dir, tfam_output_path), 'w')
+			print('\tWriting to', tfam_output_path)
 			# accesses list of strains by referring to table's column names
 			for i, fid in enumerate(colnames[4:]):
 				if iids is None:
@@ -59,7 +59,7 @@ def get_genotypes(strains, iids, output_fn, server, db, table, idCol, chrCol, po
 				# sets most fields in file to "missing"
 				tfam_outfile.write('\t'.join(map(str, [fid, iid, 0, 0, 0, -9]))+'\n' )
 			tfam_outfile.close()
-			print('\tDone writing to',tfam_output_fn,
+			print('\tDone writing to',tfam_output_path,
 					'\n\tWriting to', output_fn)
 			tfam = 1
 
@@ -80,6 +80,8 @@ def get_genotypes(strains, iids, output_fn, server, db, table, idCol, chrCol, po
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
+	parser.add_argument('-out', required=False, default='out_'+''.join(str(x) for x in time.gmtime()),
+		help='name of new/existing directory in which to store results')
 	parser.add_argument('-strains', required=True, action='append',
 		help='name of file w/ column for strains (ids column optional)')
 	parser.add_argument('-server', required=False, default='PARKSLAB',
@@ -107,13 +109,13 @@ if __name__ == '__main__':
 		try:
 			strains, iids = zip(*lines)
 		except ValueError:
-			print('\tError:',os.path.basename(sys.argv[1]), 'must have format <strain> TAB <IID>',)
-			print('\tThe IIDS will be auto-generated.')
+			# print('\tError:',os.path.basename(sys.argv[1]), 'must have format <strain> TAB <IID>')
+			# print('\tThe IIDS will be auto-generated.')
 			iids = None
 			# Convert lines to strings
 			strains =[]
 			for x in lines:
 				strains.append(''.join(x))
 		output_fn = '%s.tped' % os.path.splitext(filename)[0]
-		get_genotypes(strains, iids, output_fn, args.server, args.db, args.table, args.idCol, args.chrCol, args.posCol)
+		get_genotypes(strains, iids, output_fn, args.out, args.server, args.db, args.table, args.idCol, args.chrCol, args.posCol)
 		print ('\tDONE')
