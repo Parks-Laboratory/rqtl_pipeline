@@ -91,13 +91,17 @@ Future ideas:
 		already implemented by the database engine (significantly, pivot function).
 		-CON(s): This forces the user to first import all data to database
 		(which will force user to clean up their data and titles first).
+	-Are separate files really needed for male/female phenos? Can R/QTL do scanning
+	with only one sex at a time when given both sexes?
 '''
 import pyodbc
 import os
 import sys
-import time				# for script-duration stats presented to user
 import string
-import argparse
+import time        # for script-duration stats presented to user
+import argparse    # for parsing command-line arguments
+import pickle      # to enable make_phenotype_files() to pass information to
+                   #	make_genotype_files(), even if called separately from CLI
 
 # for fixed-point representation:
 from decimal import (Decimal, Context, InvalidOperation, ROUND_HALF_EVEN,
@@ -113,7 +117,6 @@ from enum import Enum
 class Global():
 	CHROMOSOMES = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','x']
 
-	output_dir = None
 	FIRST_STRAIN_COLUMN_INDEX = 3	# see note on inputs in script description
 	RQTL_ID_LABEL = 'id'			# column label expected by R/QTL column with iids
 	RQTL_SEX_LABEL = 'sex'			# column label expected by R/QTL column with sexes
@@ -142,10 +145,14 @@ class Rounding_method(Enum):
 class Parameter():
 
 	# template-components for names of output files:
+	output_dir = None
 	PHENO_FILENAME_PREFIXES = {Global.FEMALE:'female',Global.MALE:'male',Global.HETERO:'hetero'}	# change quoted parts only
 	PHENO_FILENAME_SUFFIX = 'csvsr_pheno.csv'
 	MAIN_GENO_FILENAME_PREFIX = 'main'
 	GENO_FILENAME_SUFFIX = 'csvsr_geno.csv'
+
+	# pass information from make_phenotype_files() to make_genotype_files()
+	PHENO_OUTPUT_FILENAME = '.pheno_output.pkl'
 
 	'''Specification for number of digits to keep after rounding an average of phenotype values)
 		Options for ROUNDING_METHOD:
@@ -190,7 +197,7 @@ class File_builder(metaclass=ABCMeta):
 	formatted_row = None
 
 	def build_filename(filename_prefix, filename_suffix):
-		return( os.path.join(Global.output_dir, filename_prefix + '_' + filename_suffix ) )
+		return( os.path.join(Parameter.output_dir, filename_prefix + '_' + filename_suffix ) )
 
 	def __init__(self, filename_prefix, filename_suffix):
 		'''
@@ -975,9 +982,9 @@ if __name__ == '__main__':
 	args = parser.parse_args(rest, namespace=args)
 	subparsers_used.append(args.subparser_name)
 
-	Global.output_dir = args.out
-	if( not os.path.isdir(Global.output_dir) ):
-		os.mkdir(Global.output_dir)
+	Parameter.output_dir = args.out
+	if( not os.path.isdir(Parameter.output_dir) ):
+		os.mkdir(Parameter.output_dir)
 
 	Parameter.USE_AVERAGE_BY_STRAIN = args.avg
 
@@ -993,7 +1000,8 @@ if __name__ == '__main__':
 		pheno_lines = [line.strip().split(',') for line in pheno_file]
 		t0 = time.clock()	# see how long query took
 		# Build phenotype files
-		phenotype_data_by_strain = make_phenotype_files( pheno_lines )
+		intermediate_file = open(os.path.join(Parameter.output_dir, Parameter.PHENO_OUTPUT_FILENAME), mode='wb')
+		pickle.dump( make_phenotype_files( pheno_lines ), intermediate_file )
 		print( 'Pheno files built in %.2f minutes' % ((time.clock()-t0)/60) )
 
 	if 'geno' in subparsers_used:
@@ -1030,5 +1038,13 @@ if __name__ == '__main__':
 
 		t0 = time.clock()	# see how long query took
 		# Build genotype file(s)
-		make_genotype_files( phenotype_data_by_strain, markers )
+		try:
+			intermediate_file_path = os.path.join(Parameter.output_dir,
+				Parameter.PHENO_OUTPUT_FILENAME)
+			intermediate_file = open(intermediate_file_path, mode='rb')
+			make_genotype_files( pickle.load(intermediate_file), markers )
+			intermediate_file.close()
+			os.remove(intermediate_file_path)
+		except FileNotFoundError:
+			sys.exit('Error: First call', os.path.basename(), 'with options for "pheno"')
 		print( 'Geno file built in %.2f minutes' % ((time.clock()-t0)/60) )

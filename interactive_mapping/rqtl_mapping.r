@@ -2,7 +2,7 @@
 ##  Read in data
 ######################################################################################################
 setwd('E:/cgottsacker/rqtl/mapping_inputs')
-input_file_directory = 'blah'
+input_file_directory = 'rqtl_21832'
 trait = 'Insulin_pg_ml'
 library(qtl)
 

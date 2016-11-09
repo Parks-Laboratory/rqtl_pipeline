@@ -27,11 +27,11 @@ def get_genotypes(strains, iids, output_fn, output_dir, server, db, table, idCol
 	# warn_if_overwrite(output_fn)
 
 	# Create file for TPED
-	outfile = open(output_fn, 'w')
+	output_path = os.path.join(output_dir, output_fn)
+	outfile = open(output_path, 'w')
 	c = pyodbc.connect(SERVER=server,DATABASE=db,DRIVER='{SQL Server Native Client 11.0}',Trusted_Connection='Yes')
 	q = query_template % ', '.join(['[%s]' % x for x in strains])
 
-	print('\tQuerrying %s on SQL-server %s' % (db,server) )
 	t0 = time.clock()	# see how long query took
 	res = c.execute(q)
 	print('\tQuery completed in %.3f minutes' % ((time.clock()-t0)/60) )
@@ -46,10 +46,9 @@ def get_genotypes(strains, iids, output_fn, output_dir, server, db, table, idCol
 			colnames = [t[0] for t in row.cursor_description]
 			colnames = [x.replace('/', '.').replace(' ', '.') for x in colnames]
 
-			tfam_output_path = output_fn.replace('.tped', '.tfam')
+			tfam_output_path = output_path.replace('.tped', '.tfam')
 			# warn_if_overwrite(tfam_output_path)
-			tfam_outfile = open(os.path.join(output_dir, tfam_output_path), 'w')
-			print('\tWriting to', tfam_output_path)
+			tfam_outfile = open(tfam_output_path, 'w')
 			# accesses list of strains by referring to table's column names
 			for i, fid in enumerate(colnames[4:]):
 				if iids is None:
@@ -59,8 +58,6 @@ def get_genotypes(strains, iids, output_fn, output_dir, server, db, table, idCol
 				# sets most fields in file to "missing"
 				tfam_outfile.write('\t'.join(map(str, [fid, iid, 0, 0, 0, -9]))+'\n' )
 			tfam_outfile.close()
-			print('\tDone writing to',tfam_output_path,
-					'\n\tWriting to', output_fn)
 			tfam = 1
 
 		linebuffer.append('\t'.join(map(str, row)))
@@ -76,7 +73,6 @@ def get_genotypes(strains, iids, output_fn, output_dir, server, db, table, idCol
 
 	c.close()
 	outfile.close()
-	print('\tDone writing to', output_fn)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -99,7 +95,7 @@ if __name__ == '__main__':
 		help='name of column containing marker genetic distance')
 	args = parser.parse_args()
 	for filename in args.strains:
-		print ('\tProcessing', filename)
+		# print ('\tBuilding PLINK inputs from', filename)
 		f = open(filename)
 		# strip() removes whitespace from beginning/end of linebuffer
 		# split() returns list of words in string, parsed using parameter char.
@@ -116,6 +112,5 @@ if __name__ == '__main__':
 			strains =[]
 			for x in lines:
 				strains.append(''.join(x))
-		output_fn = '%s.tped' % os.path.splitext(filename)[0]
+		output_fn = 'plink_input.tped'
 		get_genotypes(strains, iids, output_fn, args.out, args.server, args.db, args.table, args.idCol, args.chrCol, args.posCol)
-		print ('\tDONE')
