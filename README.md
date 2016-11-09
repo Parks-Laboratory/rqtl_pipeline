@@ -1,8 +1,13 @@
-# R/QTL Mapping Pipeline  (README IN PROGRESS)
 ## Synopsis
+The R/QTL Mapping Pipeline is a collection of scripts that streamline the process of building input files for Karl Broman's quantitative trait loci analysis package for R. The scripts connect to a database containing genotype data, filter markers using PLINK, and finally use this subset of markers along with some phenotype data to build csvsr-formatted input files for R/QTL.
 
+### Explanation of sub-directories and important files
+
+At the top of the file there should be a short introduction and/ or overview that explains **what** the project is.
 
 ## Code Example
+
+
 Set values all capitalized variables in run_pipeline.cmd, run it from Windows command line
 For interactive mapping:
 
@@ -15,26 +20,27 @@ For batch mapping on UW-Madison Cluster:
 		rqtl_inputs.rdata, map.r, map.sub, map.sh, R.tar.gz
 
 ## Motivation
-
 A short description of the motivation behind the creation and maintenance of the project. This should explain **why** the project exists.
 
-## Installation
+## Requirements
+The following programs should be installed and exist in the Windows PATH environment variable
+* PLINK 1.9  
+	* Available at: https://www.cog-genomics.org/plink2
+* Python 3.X  (tested on Python 3.5)  
+	* Available at: https://www.python.org/
+* R (tested on 3.2.4)
+	* Available at: https://cran.r-project.org/
 
-Provide code examples and explanations of how to get the project.
+
+Required Python modules:
+* PYODBC
+
+Required Python modules for testing:
+* testfixtures (for making temporary directories)
+
+Install python modules from Windows Command Prompt via `python -m pip install SomeModule`
 
 ## Tests
-
-Requirements:<br>
-	Python 3.X installed<br>
-	Path: 
-		C:\Program Files\plink_1.90_win64\
-
-Required non-standard Python Packages:
-pyodbc
-testfixtures
-
-To install python package from command line do:
-pip install <package name>
 
 Procedure for building R/QTL input files:<br>
 -Open command-line in directory with input files<br>
