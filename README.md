@@ -1,9 +1,34 @@
 ## Synopsis
 The R/QTL Mapping Pipeline is a collection of scripts that streamline the process of building input files for Karl Broman's quantitative trait loci analysis package for R. The scripts connect to a database containing genotype data, filter markers using PLINK, and finally use this subset of markers along with some phenotype data to build csvsr-formatted input files for R/QTL.
 
-### Explanation of sub-directories and important files
+### Outline
+make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL mapping
 
-At the top of the file there should be a short introduction and/ or overview that explains **what** the project is.
+### Summary of primary scripts
+* **run_pipeline.cmd**
+	* this is the backbone of the pipeline. It makes calls to scripts in the sub-directories and to make_rdata.r
+* **make_rdata.r**
+	* outputs file for performing mapping on Condor HTC cluster
+	* called by run_pipeline.cmd
+* filter_markers/**make_plink_inputs.py** 
+	* outputs file containing a sub-set of genotyped positions that meet specified conditions 
+	(e.g. allele frequency, maximum missing rate)
+	* called by run_pipeline.cmd
+* make_rqtl_inputs/src/**make_rqtl_inputs.py**
+	* outputs files with genotype and phenotype information in the csvsr format specified by R/QTL
+	* called by run_pipeline.cmd
+	* see make_rqtl_inputs/README for more details
+* batch_mapping/
+	* collection of scripts which perform R/QTL mapping on UW-Madison CHTC cluster
+	* see batch_mapping/README for more details
+	* **map.r**
+		* perform mapping, create graphs and generated data
+	* **map.sh**
+		* instrucions for each node of cluster
+	* **map.sub**
+		* instructions for CHTC submit server
+	* **mkdirs.sh**
+		* sets up hierarchy of directories on submit server to store generated output files
 
 ## Code Example
 
@@ -12,11 +37,12 @@ Set values all capitalized variables in run_pipeline.cmd, run it from Windows co
 For interactive mapping:
 
 For batch mapping on UW-Madison Cluster:
-	Copy make_rdata.r to the directory with the csvsr R/QTL files.
-	Open make_rdata.r with R/RStudio. Edit variables marked as parameters and edit mapping jobs.
-	Run the script.
-	Follow README in build_R directory if you have not previously compiled R for use on cluster
-	Copy the following to the Cluster submit server:
+
+1. Copy make_rdata.r to the directory with the csvsr R/QTL files.
+2. Open make_rdata.r with R/RStudio. Edit variables marked as parameters and edit mapping jobs.
+3. Run the script.
+4. Follow README in build_R directory if you have not previously compiled R for use on cluster
+5. Copy the following to the Cluster submit server:
 		rqtl_inputs.rdata, map.r, map.sub, map.sh, R.tar.gz
 
 ## Motivation
@@ -41,8 +67,5 @@ Required Python modules for testing:
 Install python modules from Windows Command Prompt via `python -m pip install SomeModule`
 
 ## Tests
-
-Procedure for building R/QTL input files:<br>
--Open command-line in directory with input files<br>
-
-(more documentation to come...)
+* make_rqtl_inputs/test
+	* Contains test files for major classes and functions in make_rqtl_inputs.py
