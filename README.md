@@ -7,6 +7,7 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 ### Summary of primary scripts
 * **run_pipeline.cmd**
 	* this is the backbone of the pipeline. It makes calls to scripts in the sub-directories and to make_rdata.r
+	* produces directory in which all generated files (including files for R/QTL mapping) are placed
 * **make_rdata.r**
 	* outputs file for performing mapping on Condor HTC cluster
 	* called by run_pipeline.cmd
@@ -23,10 +24,14 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 * interactive_mapping/[**rqtl_mapping.r**] (interactive_mapping/README.md)
 	* R script with commonly used mapping commands, for use in R interactive session
 
-## Code Example
+## Usage
+1. place a copy of **run_pipeline.cmd** in directory containing:
+	file with phenotype data
+2. set parameters in **run_pipeline.cmd**
+3. (Optional) if doing batch_mapping, place a copy of **make_rdata.r** in same directory as **run_pipeline.cmd** and specify what mapping jobs to do in **make_rdata.r**
+4. execute run_pipeline.cmd by doing:
+	`run_pipeline.cmd`
 
-
-Set values all capitalized variables in run_pipeline.cmd, run it from Windows command line
 For interactive mapping:
 
 For batch mapping on UW-Madison Cluster:
