@@ -1,5 +1,7 @@
 ## Synopsis
-Retrieves Mouse Diversity Array genotypes from database in csvsr R/QTL format
+Retrieves Mouse Diversity Array genotypes from database in csvsr R/QTL format. 
+
+Due to the contraint that R/QTL requires the columns of both input files to match up (i.e. order of individuals is same in both files, make_genotype_files() is dependent on results from make_phenotype_files().
 
 ## File formats
 The csvsr format has a column for each individual and genotype data or phenotype
@@ -8,8 +10,6 @@ was chosen because Microsoft SQL Server tables have a maximum number of columns,
 but unlimited number of rows. Individuals could go in either rows or columns,
 but the number of markers (and possibly number of phenotypes) will probably be
 too many to fit in columns, so must go in rows.
-
-Usage: ```make_rqtl_inputs -h ```to get list of options
 
 Inputs:
 
@@ -69,12 +69,6 @@ Outputs:
 
 
 
-
-Notes:
-* make_genotype_files() is dependent on results from make_phenotype_files().
-	This is due to the contraint that R/QTL requires the columns of both
-	input files to match up (i.e. order of individuals is same in both files)
-	
 ## Tests
 [**make_rqtl_inputs/test/**](test/README.md)
 * Contains test files for major classes and functions in make_rqtl_inputs.py
