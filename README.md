@@ -31,12 +31,7 @@ For interactive mapping:
 
 For batch mapping on UW-Madison Cluster:
 
-1. Copy make_rdata.r to the directory with the csvsr R/QTL files.
-2. Open make_rdata.r with R/RStudio. Edit variables marked as parameters and edit mapping jobs.
-3. Run the script.
-4. Follow README in build_R directory if you have not previously compiled R for use on cluster
-5. Copy the following to the Cluster submit server:
-		rqtl_inputs.rdata, map.r, map.sub, map.sh, R.tar.gz
+
 
 ## Motivation
 A short description of the motivation behind the creation and maintenance of the project. This should explain **why** the project exists.
