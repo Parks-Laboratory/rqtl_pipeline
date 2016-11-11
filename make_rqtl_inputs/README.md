@@ -10,6 +10,7 @@ but the number of markers (and possibly number of phenotypes) will probably be
 too many to fit in columns, so must go in rows.
 
 Usage: ```make_rqtl_inputs -h ```to get list of options
+
 	Inputs:
 	
 		1) File containing the list of markers, one on each line
@@ -60,11 +61,11 @@ Usage: ```make_rqtl_inputs -h ```to get list of options
 				<Global.RQTL_SEX_LABEL>,<1st individual's sex>,...,<ith individual's sex>
 				<Global.RQTL_ID_LABEL>,<1st individual's id>,...,<ith individual's id>
 
-				Notes:
-					* hetero file contains phenotype values for all males and females
-					* female file contains phenotype values for all females, and marks
-						the phenotype values for all males as missing
-					* male file (analogous to female file, female values all marked missing)
+			Notes:
+			* hetero file contains phenotype values for all males and females
+			* female file contains phenotype values for all females, and marks
+				the phenotype values for all males as missing
+			* male file (analogous to female file, female values all marked missing)
 
 
 
@@ -75,7 +76,7 @@ Notes:
 	input files to match up (i.e. order of individuals is same in both files)
 
 Known issues:
-	* Bug-source must be identified and fixed before MAKE_CHROMOSOME_FILES can
+* Bug-source must be identified and fixed before MAKE_CHROMOSOME_FILES can
 	be enabled. This option is intended to split genotype data into smaller, more
 	manageable chunks by creating a file for each chromosome in which only the
 	relevant subset of markers would be included.
