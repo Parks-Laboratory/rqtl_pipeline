@@ -38,12 +38,9 @@ A short description of the motivation behind the creation and maintenance of the
 
 ## Requirements
 The following programs should be installed and exist in the Windows PATH environment variable
-* PLINK 1.9  
-	* Available at: https://www.cog-genomics.org/plink2
-* Python 3.X  (tested on Python 3.5)  
-	* Available at: https://www.python.org/
-* R (tested on 3.2.4)
-	* Available at: https://cran.r-project.org/
+* [PLINK 1.9] (https://www.cog-genomics.org/plink2)
+* [Python 3.X] (https://www.python.org/)  (tested on Python 3.5)  
+* [R] (https://cran.r-project.org/) (tested on 3.2.4)
 
 
 Required Python modules:
