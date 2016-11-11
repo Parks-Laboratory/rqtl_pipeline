@@ -1,4 +1,4 @@
-## Goal
+## Synopsis
 Retrieves Mouse Diversity Array genotypes from database in csvsr R/QTL format
 
 ## File formats
