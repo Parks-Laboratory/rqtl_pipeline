@@ -25,15 +25,14 @@ Input:
 			<1st individual id>,<strain id>,<Male/Female>,<1st phenotype>,...,<jth phenotype>
 			...
 			<ith individual id>,<strain id>,<Male/Female>,<1st phenotype>,...,<jth phenotype>
-		Note: Accepted scientific notation formats:
-		* e.g. 1.23E3, 1.23E+3, 1.23E-3,
-			1.23e3, 1.23e+3, 1.23e-3
+		Examples of accepted scientific notation formats:
+			1.23E3, 1.23E+3, 1.23E-3, 1.23e3, 1.23e+3, 1.23e-3
 			also, 12.3E3 is accepted, even though it's not proper
-		* only digits, decimal points, and scientific notation symbols
-		(e.g. E,+,-) are allowed
-		(e.g. none of the following symbols are allowed: #%$(){}[]*=)
-		* additionally, no whitespace (i.e. spaces or tabs)
-		can exist within the value (e.g. 1.23 e4 is not legal)
+		Only digits, decimal points, and scientific notation symbols
+			(e.g. E,+,-) are allowed
+			(e.g. none of the following symbols are allowed: #%$(){}[]*=)
+		additionally, no whitespace (i.e. spaces or tabs)
+			can exist within the value (e.g. 1.23 e4 is not legal)
 Output:
 
 	Filename format:
@@ -49,6 +48,8 @@ Output:
 		<jth phenotype label>, <1st individual's phenotype>,...,<ith individual's value>
 		<Global.RQTL_SEX_LABEL>,<1st individual's sex>,...,<ith individual's sex>
 		<Global.RQTL_ID_LABEL>,<1st individual's id>,...,<ith individual's id>
+	
+	Additionally, the "pheno" option outputs a ".pkl" file being created which is used to coordinate the phenotype files (built first) with the genotype file(s) (built second).
 
 Notes on outputs:
 * hetero file contains phenotype values for all males and females
@@ -65,6 +66,8 @@ Input:
 		<2nd marker id>
 		...
 		<mth marker id>
+		
+	Additionally, the "geno" option reads in a ".pkl" file it assumes to exist in the output directory, which is used to coordinate the phenotype files (already built) with the genotype file(s) to be built.
 		
 Output:
 	
