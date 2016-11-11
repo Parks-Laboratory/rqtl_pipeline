@@ -2,8 +2,7 @@
 '''
 Retrieves Mouse Diversity Array genotypes from database in PLINK format
 
-Usage: plink.py <file with list of strains>
-Output: .tped and .tfam
+Usage: make_plink_inputs.py -h for list of options
 '''
 
 import pyodbc
