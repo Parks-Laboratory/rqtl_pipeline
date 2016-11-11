@@ -18,8 +18,10 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 	* outputs files with genotype and phenotype information in the csvsr format specified by R/QTL
 	* called by run_pipeline.cmd
 	* see make_rqtl_inputs/README for more details
-* [**batch_mapping/**] (batch_mapping/README.md)
+* [**batch_mapping/***] (batch_mapping/README.md)
 	* collection of scripts which perform R/QTL mapping on UW-Madison CHTC cluster
+* interactive_mapping/[**rqtl_mapping.r**] (interactive_mapping/README.md)
+	* R script with commonly used mapping commands, for use in R interactive session
 
 ## Code Example
 
