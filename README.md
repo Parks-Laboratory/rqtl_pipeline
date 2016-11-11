@@ -30,7 +30,7 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 3. (Optional) if doing batch_mapping, place a copy of **make_rdata.r** in same directory as **run_pipeline.cmd** and specify what mapping jobs to do in **make_rdata.r**
 4. execute run_pipeline.cmd in Windows Command Prompt by simply typing 
 
-		`run_pipeline.cmd`
+		run_pipeline.cmd
 
 
 For interactive mapping:
@@ -55,4 +55,4 @@ Required Python modules:
 
 Install python modules from Windows Command Prompt via:
 	
-	`python -m pip install SomeModule`
+	python -m pip install SomeModule
