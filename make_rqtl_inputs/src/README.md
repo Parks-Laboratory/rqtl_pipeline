@@ -12,12 +12,12 @@ This README is intended to aid in future modifications to make_rqtl_inputs.py
 		
 ## Data structure where data averaged by strain
 						Strains (class)			
-						/
-			strains (dictionary)
+	                                       /
+	                    strains (dictionary)
 		strain (string) --> sexes (list)
 							/          \
-			   females (list)           males (list)	(same as for females)
+	      females (list)           males (list)	(same as for females)
               /      |     \          
-Individual_averaged  ...   ...
+	Individual_averaged  ...   ...
         |
 	rows (list) 										(row upon row of phenotype data)
