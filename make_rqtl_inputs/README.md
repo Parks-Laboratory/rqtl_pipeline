@@ -76,8 +76,8 @@ Notes:
 	input files to match up (i.e. order of individuals is same in both files)
 	
 ## Tests
-* [**make_rqtl_inputs/test/* **](make_rqtl_inputs/test/README.md)
-	* Contains test files for major classes and functions in make_rqtl_inputs.py
+[**make_rqtl_inputs/test/**](test/README.md)
+* Contains test files for major classes and functions in make_rqtl_inputs.py
 
 
 ## Known issues
