@@ -5,8 +5,7 @@ Several test files written using Python's unittest built-in module. Tests targe 
 Commands for running any or all tests. Just comment/uncomment lines as desired.
 
 ## Requirements
-Required Python modules for testing:
-* testfixtures (for making temporary directories)
+testfixtures (Python module for making temporary directories)
 
 Install python module from Windows Command Prompt via `python -m pip install SomeModule`
 
