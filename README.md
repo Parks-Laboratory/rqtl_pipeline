@@ -14,7 +14,7 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 	* outputs file containing a sub-set of genotyped positions that meet specified conditions 
 	(e.g. allele frequency, maximum missing rate)
 	* called by run_pipeline.cmd
-* make_rqtl_inputs/src/**make_rqtl_inputs.py**(make_rqtl_inputs/README.md)
+* make_rqtl_inputs/src/[**make_rqtl_inputs.py**] (make_rqtl_inputs/README.md)
 	* outputs files with genotype and phenotype information in the csvsr format specified by R/QTL
 	* called by run_pipeline.cmd
 	* see make_rqtl_inputs/README for more details
