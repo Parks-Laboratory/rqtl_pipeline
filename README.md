@@ -28,7 +28,9 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 1. place a copy of **run_pipeline.cmd** in directory containing	file with phenotype data
 2. set parameters in **run_pipeline.cmd**
 3. (Optional) if doing batch_mapping, place a copy of **make_rdata.r** in same directory as **run_pipeline.cmd** and specify what mapping jobs to do in **make_rdata.r**
-4. execute run_pipeline.cmd in Windows Command Prompt by simply typing `run_pipeline.cmd`
+4. execute run_pipeline.cmd in Windows Command Prompt by simply typing 
+
+		`run_pipeline.cmd`
 
 
 For interactive mapping:
@@ -51,4 +53,6 @@ The following programs should be installed and exist in the Windows PATH environ
 Required Python modules:
 * PYODBC
 
-Install python modules from Windows Command Prompt via `python -m pip install SomeModule`
+Install python modules from Windows Command Prompt via:
+	
+	`python -m pip install SomeModule`
