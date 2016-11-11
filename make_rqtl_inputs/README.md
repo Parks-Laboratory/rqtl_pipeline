@@ -50,11 +50,11 @@ Output:
 		<Global.RQTL_SEX_LABEL>,<1st individual's sex>,...,<ith individual's sex>
 		<Global.RQTL_ID_LABEL>,<1st individual's id>,...,<ith individual's id>
 
-	Notes:
-	* hetero file contains phenotype values for all males and females
-	* female file contains phenotype values for all females, and marks
-		the phenotype values for all males as missing
-	* male file (analogous to female file, female values all marked missing)
+Notes on outputs:
+* hetero file contains phenotype values for all males and females
+* female file contains phenotype values for all females, and marks
+	the phenotype values for all males as missing
+* male file (analogous to female file, female values all marked missing)
 
 
 ## Geno
