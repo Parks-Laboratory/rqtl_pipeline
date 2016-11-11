@@ -10,25 +10,16 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 * **make_rdata.r**
 	* outputs file for performing mapping on Condor HTC cluster
 	* called by run_pipeline.cmd
-* filter_markers/[**make_plink_inputs.py**] (make_rqtl_inputs/README.md)
+* filter_markers/[**make_plink_inputs.py**] (make_plink_inputs/README.md)
 	* outputs file containing a sub-set of genotyped positions that meet specified conditions 
 	(e.g. allele frequency, maximum missing rate)
 	* called by run_pipeline.cmd
-* make_rqtl_inputs/src/**make_rqtl_inputs.py**
+* make_rqtl_inputs/src/**make_rqtl_inputs.py**(make_rqtl_inputs/README.md)
 	* outputs files with genotype and phenotype information in the csvsr format specified by R/QTL
 	* called by run_pipeline.cmd
 	* see make_rqtl_inputs/README for more details
-* [batch_mapping/] (batch_mapping/README.md)
+* [**batch_mapping/**] (batch_mapping/README.md)
 	* collection of scripts which perform R/QTL mapping on UW-Madison CHTC cluster
-	* see batch_mapping/README for more details
-	* **map.r**
-		* perform mapping, create graphs and generated data
-	* **map.sh**
-		* instrucions for each node of cluster
-	* **map.sub**
-		* instructions for CHTC submit server
-	* **mkdirs.sh**
-		* sets up hierarchy of directories on submit server to store generated output files
 
 ## Code Example
 
