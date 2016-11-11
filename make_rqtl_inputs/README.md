@@ -13,7 +13,8 @@ To build file with phenotype data in R/QTL format (taking average of individuals
 	
 To build file with genotype data in R/QTL format (taking average of individuals in each strain):
 
-	make_rqtl_inputs.py -out rqtlOutputDir geno -mkFile rqtlOutputDir/fileWithListOfFilteredMarkers.snplist -table "[dbo].[rqtl_csvsr_geno_format]" -mkTable "[dbo].[genotypes]" -db HMDP -avg
+	make_rqtl_inputs.py -out rqtlOutputDir geno -mkFile rqtlOutputDir/fileWithListOfFilteredMarkers.snplist 
+		-table "[dbo].[rqtl_csvsr_geno_format]" -mkTable "[dbo].[genotypes]" -db HMDP -avg
 
 
 ## Pheno
@@ -49,7 +50,8 @@ Output:
 		<Global.RQTL_SEX_LABEL>,<1st individual's sex>,...,<ith individual's sex>
 		<Global.RQTL_ID_LABEL>,<1st individual's id>,...,<ith individual's id>
 	
-	Additionally, the "pheno" option outputs a ".pkl" file being created which is used to coordinate the phenotype files (built first) with the genotype file(s) (built second).
+	Additionally, the "pheno" option outputs a ".pkl" file being created which is used to coordinate 
+	the phenotype files (built first) with the genotype file(s) (built second).
 
 Notes on outputs:
 * hetero file contains phenotype values for all males and females
@@ -67,7 +69,8 @@ Input:
 		...
 		<mth marker id>
 		
-	Additionally, the "geno" option reads in a ".pkl" file it assumes to exist in the output directory, which is used to coordinate the phenotype files (already built) with the genotype file(s) to be built.
+	Additionally, the "geno" option reads in a ".pkl" file it assumes to exist in the output directory, 
+	which is used to coordinate the phenotype files (already built) with the genotype file(s) to be built.
 		
 Output:
 	
