@@ -1,12 +1,32 @@
 ## Synopsis
 The R/QTL Mapping Pipeline is a collection of scripts that streamline the process of building input files for Karl Broman's quantitative trait loci analysis package for R. The scripts connect to a database containing genotype data, filter markers using PLINK, and finally use this subset of markers along with some phenotype data to build csvsr-formatted input files for R/QTL.
 
-### Outline
+## Outline
 make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL mapping
 
-### Summary of primary scripts
+## Usage
+1. place a copy of **run_pipeline.cmd** in directory containing	file with phenotype data
+2. set parameters in **run_pipeline.cmd**
+3. (Optional) if doing batch_mapping, place a copy of **make_rdata.r** in same directory as **run_pipeline.cmd** and specify what mapping jobs to do in **make_rdata.r** (see comments in **make_rdata.r** and [map.r](batch_mapping/README_MAP.R.md#mapping-theory) documentation for details on specifying mapping jobs) 
+4. execute run_pipeline.cmd in Windows Command Prompt by simply typing 
+
+		run_pipeline.cmd
+
+
+For interactive mapping:
+
+1. open interactive_mapping/[**rqtl_mapping.r**] (interactive_mapping/README.md) with [RStudio](https://www.rstudio.com/) or [RGui](https://cran.r-project.org/)
+2. after loading data into a cross object, choose blocks of code to run
+
+For batch mapping on UW-Madison Cluster:
+
+1. see [documentation](batch_mapping/README.md)
+
+
+## Summary of primary scripts
 * **run_pipeline.cmd**
 	* this is the backbone of the pipeline. It makes calls to scripts in the sub-directories and to make_rdata.r
+	* produces directory in which all generated files (including files for R/QTL mapping) are placed
 * **make_rdata.r**
 	* outputs file for performing mapping on Condor HTC cluster
 	* called by run_pipeline.cmd
@@ -23,19 +43,6 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 * interactive_mapping/[**rqtl_mapping.r**] (interactive_mapping/README.md)
 	* R script with commonly used mapping commands, for use in R interactive session
 
-## Code Example
-
-
-Set values all capitalized variables in run_pipeline.cmd, run it from Windows command line
-For interactive mapping:
-
-For batch mapping on UW-Madison Cluster:
-
-
-
-## Motivation
-A short description of the motivation behind the creation and maintenance of the project. This should explain **why** the project exists.
-
 ## Requirements
 The following programs should be installed and exist in the Windows PATH environment variable
 * [PLINK 1.9] (https://www.cog-genomics.org/plink2)
@@ -46,11 +53,6 @@ The following programs should be installed and exist in the Windows PATH environ
 Required Python modules:
 * PYODBC
 
-Required Python modules for testing:
-* testfixtures (for making temporary directories)
-
-Install python modules from Windows Command Prompt via `python -m pip install SomeModule`
-
-## Tests
-* make_rqtl_inputs/test
-	* Contains test files for major classes and functions in make_rqtl_inputs.py
+Install python modules from Windows Command Prompt via:
+	
+	python -m pip install SomeModule
