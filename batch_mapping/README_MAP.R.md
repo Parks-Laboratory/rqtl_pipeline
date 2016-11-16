@@ -32,3 +32,8 @@
 			(.pdf used instead of .png b/c chtc nodes can't make .pngs out of the box)
 	* **.rdata** file has the R/QTL scanone object, which can be loaded back
 				into R to make additional plots
+				
+## Mapping theory:
+
+
+
