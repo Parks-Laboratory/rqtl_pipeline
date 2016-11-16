@@ -35,6 +35,13 @@ Each node of cluster should call map.r by using
 				into R to make additional plots
 				
 ## Mapping theory:
+### Including covariates
+* For **additive covariate** "the average phenotype is allowed to be different
+in the two sexes, but the effect of the putative QTL is assumed to
+be the same in the two sexes. 
+* For **interactive covariate**, 
+"the QTL is allowed to be different in the two sexes."
 
+("A brief tour of R/qtl"- Karl W Broman)
 
 
