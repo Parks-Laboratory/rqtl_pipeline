@@ -1,8 +1,8 @@
-Usage: 
+## Usage: 
 
    ```R CMD BATCH --slave '--args rdata_file="<preprocessed inputs>.rdata" chtc_process_number="$1"' map.r```
    
-Inputs:
+## Inputs:
 
 * rdata_file (see make_rdata.r for details):
 * Fields:
@@ -15,7 +15,9 @@ Inputs:
 						values should be used
 		* **covariate_type**: 'additive', or 'interactive' (see below for difference)
 		* **covariate_trait**: name of the trait to use in covariate mapping
-Outputs:
+		
+## Outputs:
+
 * The filenames indicate if males, females, or both males and females ('hetero') were used in the mapping.
 * The filenames also indicate if the log or raw values were used ('logged' vs 'not_logged')
 * When both males and females were mapped together, the filename indicates 
