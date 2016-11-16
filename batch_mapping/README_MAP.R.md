@@ -6,7 +6,7 @@
 
 * rdata_file (see make_rdata.r for details):
 	* **traits**: List of traits. trait_index argument specifies which trait to map with
-	* **mapping_jobs**: List of objects containing specifics of mapping to be done
+	* **mapping_jobs**: List of **mapping_job** objects, each containing specifics of mapping to be done
 		* Fields (per **mapping_job** object):
 			* **cross**: R/QTL cross object containing genotype and phenotype information
 			* **sex**: 'female', 'male', or 'hetero'
