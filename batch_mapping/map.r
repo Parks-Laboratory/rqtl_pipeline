@@ -19,32 +19,47 @@ if( !require(R6) ){
 	install.packages('R6')
 }
 
+# Returns true if a column only contains 0 or 1 (binary values to indicate discrete value)
+is_binary_indicator = function(col){
+	unique_values = unique(col)
+	has_0 = (0 %in% unique_values)
+	has_1 = (1 %in% unique_values)
+	return( (length(unique_values) == 2 && has_0 && has_1) ||
+		((length(unique_values) == 1) && (has_0 || has_1) ) )
+}
 
 #	QTL mapping
 map = function( trait, cross, sex, log_status, covariate_type, covariate_trait ){
-	pheno_col = trait
-	# log2(0) = -Inf, which would not be good
-	if( log_status == 'logged' && 0 %in% pheno_col){
-		stop('Error: "', pheno_col, '" contains the value '0' and cannot be logged' )
-	}else{
-		pheno_col = log2(cross$pheno[[trait]])
+	pheno_col = cross$pheno[[trait]]
+
+	# log2(0) == -Inf, which would not be good
+	if( log_status == 'logged'){
+		if(!(0 %in% pheno_col) ){
+			pheno_col = log2(pheno_col)
+		}else if( is_binary_indicator(pheno_col) ){
+			sprintf('Trait "%s" is a binary indicator containing the value "0". Values not logged.', pheno_col)
+		}
+		else{
+			stop('Error: "', pheno_col, '" contains the value "0" and cannot be logged' )
+		}
 	}
 
 	if( !is.na(covariate_type) ){
 		output_file_naming_template = paste(c( sex, trait, covariate_type, covariate_trait, log_status), collapse = '_')
 
 		covariate = cross$pheno[[covariate_trait]]	# e.g., sex column
-		# log2(0) = -Inf, which would not be good
-		if(log_status == 'logged' && 0 %in% covariate){
-			stop('Error: "', covariate_trait, '" contains the value '0' and cannot be logged' )
-		}else{
-			covariate = log2(covariate)
+		# log2(0) == -Inf, which would not be good
+		if( log_status == 'logged'){
+			if(!(0 %in% covariate) ){
+				covariate = log2(covariate)
+			}else if( is_binary_indicator(pheno_col) ){
+				sprintf('Trait "%s" is a binary indicator containing the value "0". Values not logged.', covariate_trait)
+			}
+			else{
+				stop('Error: "', covariate_trait, '" contains the value "0" and cannot be logged' )
+			}
 		}
-		
-		# For additive covariate the average phenotype is allowed to be different
-		# in the two sexes, but the effect of the putative QTL is assumed to
-		# be the same in the two sexes. For interactive covariate, the effect of the
-		# putative QTL is also allowed to be different for each sex
+
 		if( covariate_type == 'additive' ){
 			scan=scanone(cross, pheno.col = pheno_col, addcovar = covariate)
 		}else if( covariate_type == 'interactive' ){

@@ -343,6 +343,7 @@ class Strains(object):
 		'''Create Strain object
 		Arguments:
 		average_by_strain -- True or False'''
+		
 		self.average_by_strain = average_by_strain
 		self.strains = {}
 		self.ordered_strains = []
@@ -947,15 +948,17 @@ if __name__ == '__main__':
 		for line in geno_lines:
 			markers.add(Global.EMPTY_STRING.join(line))
 
-		t0 = time.clock()	# see how long query took
-		# Build genotype file(s)
 		try:
+			t0 = time.clock()	# see how long query took
+
+			# Build genotype file(s)
 			intermediate_file_path = os.path.join(Parameter.output_dir,
 				Parameter.PHENO_OUTPUT_FILENAME)
 			intermediate_file = open(intermediate_file_path, mode='rb')
 			make_genotype_files( pickle.load(intermediate_file), markers )
 			intermediate_file.close()
 			os.remove(intermediate_file_path)
+
+			print( 'Geno file built in %.2f minutes' % ((time.clock()-t0)/60) )
 		except FileNotFoundError:
 			sys.exit('Error: First call', os.path.basename(), 'with options for "pheno"')
-		print( 'Geno file built in %.2f minutes' % ((time.clock()-t0)/60) )
