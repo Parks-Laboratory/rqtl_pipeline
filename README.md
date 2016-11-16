@@ -4,6 +4,25 @@ The R/QTL Mapping Pipeline is a collection of scripts that streamline the proces
 ## Outline
 make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL mapping
 
+## Usage
+1. place a copy of **run_pipeline.cmd** in directory containing	file with phenotype data
+2. set parameters in **run_pipeline.cmd**
+3. (Optional) if doing batch_mapping, place a copy of **make_rdata.r** in same directory as **run_pipeline.cmd** and specify what mapping jobs to do in **make_rdata.r**
+4. execute run_pipeline.cmd in Windows Command Prompt by simply typing 
+
+		run_pipeline.cmd
+
+
+For interactive mapping:
+
+1. open interactive_mapping/**rqtl_mapping.r** with [RStudio](https://www.rstudio.com/) or [RGui](https://cran.r-project.org/)
+2. after loading data into a cross object, choose blocks of code to run
+
+For batch mapping on UW-Madison Cluster:
+
+1. see [documentation](batch_mapping/README.md)
+
+
 ## Summary of primary scripts
 * **run_pipeline.cmd**
 	* this is the backbone of the pipeline. It makes calls to scripts in the sub-directories and to make_rdata.r
@@ -23,25 +42,6 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 	* collection of scripts which perform R/QTL mapping on UW-Madison CHTC cluster
 * interactive_mapping/[**rqtl_mapping.r**] (interactive_mapping/README.md)
 	* R script with commonly used mapping commands, for use in R interactive session
-
-## Usage
-1. place a copy of **run_pipeline.cmd** in directory containing	file with phenotype data
-2. set parameters in **run_pipeline.cmd**
-3. (Optional) if doing batch_mapping, place a copy of **make_rdata.r** in same directory as **run_pipeline.cmd** and specify what mapping jobs to do in **make_rdata.r**
-4. execute run_pipeline.cmd in Windows Command Prompt by simply typing 
-
-		run_pipeline.cmd
-
-
-For interactive mapping:
-
-1. open interactive_mapping/**rqtl_mapping.r** with [RStudio](https://www.rstudio.com/) or [RGui](https://cran.r-project.org/)
-2. after loading data into a cross object, choose blocks of code to run
-
-For batch mapping on UW-Madison Cluster:
-
-1. see [documentation](batch_mapping/README.md)
-
 
 ## Requirements
 The following programs should be installed and exist in the Windows PATH environment variable
