@@ -1,5 +1,7 @@
 ## Usage: 
 
+Each node of cluster should call map.r by using
+
    ```R CMD BATCH --slave '--args rdata_file="<preprocessed inputs>.rdata" chtc_process_number="$1"' map.r```
    
 ## Inputs:
