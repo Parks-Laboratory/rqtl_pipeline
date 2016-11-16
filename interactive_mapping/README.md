@@ -13,7 +13,7 @@ cross = drop.markers(cross, duplicate_markers)
 
 ## Usage
 1. Open **rqtl_mapping.r** with RStudio/RGui
-2. Set parameters for read.cross
+2. Set parameters for read.cross()
 3. Load an R/QTL cross object by selecting and running either Option 1 or Option 2 under heading "Read in data"
 4. Alter snippet, select it, run it
 
