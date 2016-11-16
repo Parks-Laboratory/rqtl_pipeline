@@ -7,7 +7,7 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 ## Usage
 1. place a copy of **run_pipeline.cmd** in directory containing	file with phenotype data
 2. set parameters in **run_pipeline.cmd**
-3. (Optional) if doing batch_mapping, place a copy of **make_rdata.r** in same directory as **run_pipeline.cmd** and specify what mapping jobs to do in **make_rdata.r** (see comments in **make_rdata.r** and [map.r](batch_mapping/README_MAP.R.md#mapping-theory) documentation for details on specifying mapping jobs) 
+3. (Optional) if doing batch mapping with UW-Madison's Condor HTC cluster, place a copy of **make_rdata.r** in same directory as **run_pipeline.cmd** and specify what mapping jobs to do in **make_rdata.r** (see comments in **make_rdata.r** for details on specifying mapping jobs and [**map.r**](batch_mapping/README_MAP.R.md#mapping-theory) for general mapping information.) 
 4. execute run_pipeline.cmd in Windows Command Prompt by simply typing 
 
 		run_pipeline.cmd

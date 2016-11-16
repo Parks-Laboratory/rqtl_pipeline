@@ -1,20 +1,21 @@
 ## Usage: 
 
+Each node of cluster should call map.r by using
+
    ```R CMD BATCH --slave '--args rdata_file="<preprocessed inputs>.rdata" chtc_process_number="$1"' map.r```
    
 ## Inputs:
 
 * rdata_file (see make_rdata.r for details):
-* Fields:
-* traits: List of traits. trait_index argument specifies which trait to map with
-* mapping_jobs: List of objects containing specifics of mapping to be done
-	* Fields (per **mapping_job** object):
-		* **cross**: R/QTL cross object containing genotype and phenotype information
-		* **sex**: 'female', 'male', or 'hetero'
-		* **log_status**: "logged" or "not-logged" specifies if log or raw trait 
-						values should be used
-		* **covariate_type**: 'additive', or 'interactive' (see below for difference)
-		* **covariate_trait**: name of the trait to use in covariate mapping
+	* **traits**: List of traits. trait_index argument specifies which trait to map with
+	* **mapping_jobs**: List of **mapping_job** objects, each containing specifics of mapping to be done
+		* Fields (per **mapping_job** object):
+			* **cross**: R/QTL cross object containing genotype and phenotype information
+			* **sex**: 'female', 'male', or 'hetero'
+			* **log_status**: "logged" or "not-logged" specifies if log or raw trait 
+							values should be used
+			* **covariate_type**: 'additive', or 'interactive' (see below for difference)
+			* **covariate_trait**: name of the trait to use in covariate mapping
 		
 ## Outputs:
 
@@ -34,6 +35,13 @@
 				into R to make additional plots
 				
 ## Mapping theory:
+### Including covariates
+* For **additive covariate** "the average phenotype is allowed to be different
+in the two sexes, but the effect of the putative QTL is assumed to
+be the same in the two sexes." 
+* For **interactive covariate**, 
+"the QTL is allowed to be different in the two sexes."
 
+("A brief tour of R/qtl"- Karl W Broman)
 
 
