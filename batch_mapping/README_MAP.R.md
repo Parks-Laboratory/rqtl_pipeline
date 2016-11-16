@@ -5,16 +5,16 @@
 ## Inputs:
 
 * rdata_file (see make_rdata.r for details):
-* Fields:
-* traits: List of traits. trait_index argument specifies which trait to map with
-* mapping_jobs: List of objects containing specifics of mapping to be done
-	* Fields (per **mapping_job** object):
-		* **cross**: R/QTL cross object containing genotype and phenotype information
-		* **sex**: 'female', 'male', or 'hetero'
-		* **log_status**: "logged" or "not-logged" specifies if log or raw trait 
-						values should be used
-		* **covariate_type**: 'additive', or 'interactive' (see below for difference)
-		* **covariate_trait**: name of the trait to use in covariate mapping
+	* Fields:
+		* **traits**: List of traits. trait_index argument specifies which trait to map with
+		* **mapping_jobs**: List of objects containing specifics of mapping to be done
+			* Fields (per **mapping_job** object):
+				* **cross**: R/QTL cross object containing genotype and phenotype information
+				* **sex**: 'female', 'male', or 'hetero'
+				* **log_status**: "logged" or "not-logged" specifies if log or raw trait 
+								values should be used
+				* **covariate_type**: 'additive', or 'interactive' (see below for difference)
+				* **covariate_trait**: name of the trait to use in covariate mapping
 		
 ## Outputs:
 
