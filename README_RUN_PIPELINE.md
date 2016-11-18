@@ -1,10 +1,11 @@
 ## Important paramters
-* Get descriptions of parameters:
-	* `make_plink_inputs.py -h`
-	* `make_rqtl_inputs.py pheno -h`
-	* `make_rqtl_inputs.py geno -h`
-	* `plink -h`
-### for make_rqtl_inputs
+### To get descriptions of parameters:
+* `make_plink_inputs.py -h`
+* `make_rqtl_inputs.py pheno -h`
+* `make_rqtl_inputs.py geno -h`
+* `plink -h`
+	
+### For make_rqtl_inputs:
 * -avg
 	* averages all male phenotypes of a strain and all female phenotypes of a strain (both geno and pheno files affected)
 	* either do:
