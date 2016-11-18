@@ -37,7 +37,6 @@ For batch mapping on UW-Madison Cluster:
 * make_rqtl_inputs/src/[**make_rqtl_inputs.py**] (make_rqtl_inputs/README.md)
 	* outputs files with genotype and phenotype information in the csvsr format specified by R/QTL
 	* called by run_pipeline.cmd
-	* see make_rqtl_inputs/README for more details
 * [**batch_mapping/***] (batch_mapping/README.md)
 	* collection of scripts which perform R/QTL mapping on UW-Madison CHTC cluster
 * interactive_mapping/[**rqtl_mapping.r**] (interactive_mapping/README.md)
