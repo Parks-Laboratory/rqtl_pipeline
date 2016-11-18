@@ -30,7 +30,7 @@ For batch mapping on UW-Madison Cluster:
 * **make_rdata.r**
 	* outputs file for performing mapping on Condor HTC cluster
 	* called by run_pipeline.cmd
-* filter_markers/[**make_plink_inputs.py**] (make_plink_inputs/README.md)
+* filter_markers/[**make_plink_inputs.py**] (filter_markers/README.md)
 	* outputs file containing a sub-set of genotyped positions that meet specified conditions 
 	(e.g. allele frequency, maximum missing rate)
 	* called by run_pipeline.cmd
