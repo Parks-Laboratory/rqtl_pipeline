@@ -343,7 +343,6 @@ class Strains(object):
 		'''Create Strain object
 		Arguments:
 		average_by_strain -- True or False'''
-		
 		self.average_by_strain = average_by_strain
 		self.strains = {}
 		self.ordered_strains = []

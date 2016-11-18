@@ -75,8 +75,8 @@ def get_genotypes(strains, iids, output_fn, output_dir, server, db, table, idCol
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-out', required=False, default='out_'+''.join(str(x) for x in time.gmtime()),
-		help='name of new/existing directory in which to store results')
+	parser.add_argument('-out', required=False, default='out_'+''.join(str(x) for x in time.gmtime())+'/plink_input',
+		help='name of file-prefix to use when storing results. Creates .')
 	parser.add_argument('-strains', required=True, action='append',
 		help='name of file w/ column for strains (ids column optional)')
 	parser.add_argument('-server', required=False, default='PARKSLAB',
@@ -111,5 +111,11 @@ if __name__ == '__main__':
 			strains =[]
 			for x in lines:
 				strains.append(''.join(x))
-		output_fn = 'plink_input.tped'
-		get_genotypes(strains, iids, output_fn, args.out, args.server, args.db, args.table, args.idCol, args.chrCol, args.posCol)
+
+		output_dir = os.path.split(args.out)[0]
+		if( not os.path.isdir(output_dir) ):
+			os.mkdir(output_dir)
+		output_fn = os.path.split(args.out)[1]+'.tped'
+
+
+		get_genotypes(strains, iids, output_fn, output_dir, args.server, args.db, args.table, args.idCol, args.chrCol, args.posCol)
