@@ -1,9 +1,16 @@
-## Code Examples
+## Important paramters
 * Get descriptions of parameters:
 	* `make_plink_inputs.py -h`
 	* `make_rqtl_inputs.py pheno -h`
 	* `make_rqtl_inputs.py geno -h`
 	* `plink -h`
+### for make_rqtl_inputs
+* -avg
+	* either do:
+		* `make_rqtl_inputs.py -avg pheno ...` and `make_rqtl_inputs.py -avg geno ...`, or
+		* `make_rqtl_inputs.py pheno ...` and `make_rqtl_inputs.py geno ...`
+		
+		
 
 
 ## PLINK 
