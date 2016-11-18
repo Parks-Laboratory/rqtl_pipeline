@@ -5,7 +5,7 @@ The R/QTL Mapping Pipeline is a collection of scripts that streamline the proces
 make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL mapping
 
 ## Usage
-1. place a copy of **run_pipeline.cmd** in directory containing	file with phenotype data
+1. place a copy of [**run_pipeline.cmd**](README_RUN_PIPELINE.md) in directory containing	file with phenotype data
 2. set parameters in **run_pipeline.cmd**
 3. (Optional) if doing batch mapping with UW-Madison's Condor HTC cluster, place a copy of **make_rdata.r** in same directory as **run_pipeline.cmd** and specify what mapping jobs to do in **make_rdata.r** (see comments in **make_rdata.r** for details on specifying mapping jobs and [**map.r**](batch_mapping/README_MAP.R.md#mapping-theory) for general mapping information.) 
 4. execute run_pipeline.cmd in Windows Command Prompt by simply typing 
@@ -30,8 +30,8 @@ For batch mapping on UW-Madison Cluster:
 * **make_rdata.r**
 	* outputs file for performing mapping on Condor HTC cluster
 	* called by run_pipeline.cmd
-* filter_markers/[**make_plink_inputs.py**] (filter_markers/README.md)
-	* outputs file containing a sub-set of genotyped positions that meet specified conditions 
+* filter_markers/**make_plink_inputs.py**
+	* outputs input files for PLINK which can then filter markers down to a sub-set that meet specified conditions 
 	(e.g. allele frequency, maximum missing rate)
 	* called by run_pipeline.cmd
 * make_rqtl_inputs/src/[**make_rqtl_inputs.py**] (make_rqtl_inputs/README.md)
