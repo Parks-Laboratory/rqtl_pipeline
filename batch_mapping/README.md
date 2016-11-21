@@ -1,10 +1,11 @@
 ## Synopsis
-Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing 
+Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing. See this [introduction to running Condor jobs] (http://chtc.cs.wisc.edu/helloworld.shtml) for a primer.
 
 ## Usage
 1. Execute [**run_pipeline.cmd**](../README.md) (with condition set so .rdata file is generated) if not previously executed
 2. [**Compile R for portable use**] (build_R/README.md) on CHTC cluster machines, if not done previously
-3. Copy the following to the Cluster submit server:
+3. Modify the number of jobs to queue by editing the number after 'queue' in **map.sub**. The 
+4. Copy the following to the Cluster submit server:
 	* **map.sub**
 	* **map.sh**
 	* **map.r**
@@ -12,18 +13,27 @@ Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing
 	* **R.tar.gz**	(portable R installation)
 	* **mkdirs.sh**
 	
-	`scp map.sub map.sh map.r rqtl_inputs.rdata R.tar.gz mkdirs.sh username@submit-3.chtc.wisc.edu`
+	`$ scp map.sub map.sh map.r rqtl_inputs.rdata R.tar.gz mkdirs.sh username@submit-3.chtc.wisc.edu:`
 	
-4. SSH into the submit server
+5. SSH into the submit server
 
-	`ssh username@submit-3.chtc.wisc.edu`
+	`$ ssh username@submit-3.chtc.wisc.edu`
+
+6. Create directories runs and runs/_logs
+
+	`$ ./mkdirs.sh`
 
 
-3. Submit the job
+7. Submit the job
 
-	`condor_submit map.sub`
+	`$ condor_submit map.sub`
 	
-4. Wait for jobs to finish, copy back 
+8. Wait for jobs to finish, exit the session, and copy back the results directory
+
+	```
+	$ exit
+	$ scp -r username@submit-3.chtc.wisc.edu:runs .
+	```
 	
 	
 ## Summary of important files:
@@ -40,3 +50,4 @@ Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing
   * Sets up hierarchy of directories on submit server to store generated output files
 
 ## Requirements:
+* Program capable of making an SSH connection (e.g. Cygwin, PuTTY)
