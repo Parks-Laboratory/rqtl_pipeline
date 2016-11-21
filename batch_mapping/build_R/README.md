@@ -22,7 +22,7 @@ Compiles a portable version of the R statistical package plus optional additiona
 	
 	```
 	$ ./install_r.sh
-	...
+	:
 	$ exit
 	```
 	
