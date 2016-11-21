@@ -2,9 +2,7 @@
 Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing 
 
 ## Usage
-1. Copy make_rdata.r to the directory with the csvsr R/QTL files.
-2. Open make_rdata.r with R/RStudio. Edit variables marked as parameters and edit mapping jobs.
-3. Run the script.
+1. Execute [**run_pipeline.cmd**](../../) (with condition set so .rdata file is generated) if not previously executed
 4. Follow README in build_R directory if you have not previously compiled R for use on cluster
 5. Copy the following to the Cluster submit server:
 		rqtl_inputs.rdata, map.r, map.sub, map.sh, R.tar.gz
