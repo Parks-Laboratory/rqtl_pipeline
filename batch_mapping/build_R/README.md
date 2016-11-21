@@ -14,9 +14,17 @@ Compiles a portable version of the R statistical package plus optional additiona
 
 	`ssh username@submit-3.chtc.wisc.edu`
 
-3. Submit the job
+3. Submit the job (puts user in interactive session)
 
-	`condor_submit install_r.sub`
+	`condor_submit -i install_r.sub`
 	
-4. Wait for job to finish (compiled version stored in a file **R.tar.gz** on submit server)
+4. Execute the script to do the compilation, wait for it to finish (may take several minutes), then exit the session
+	
+	```
+	$ ./install_r.sh
+	...
+	$ exit
+	```
+	
+5. Wait for job to finish (compiled version stored in a file **R.tar.gz** on submit server)
 
