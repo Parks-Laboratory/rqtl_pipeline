@@ -6,7 +6,7 @@ log = interactive.log
 output = process.out
 error = process.err
 
-# If you wish to compile code, you'll need the below lines. 
+# If you wish to compile code, you'll need the below lines.
 #  Otherwise, LEAVE THEM OUT if you just want to interactively test!
 +IsBuildJob = true
 requirements = (OpSysAndVer =?= "SL6") && ( IsBuildSlot == true )
