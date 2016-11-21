@@ -22,7 +22,7 @@ Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing.
 
 	`$ ssh username@submit-3.chtc.wisc.edu`
 
-6. Create directories runs and runs/_logs
+6. Create directories `runs` and `runs/_logs`
 
 	`$ ./mkdirs.sh`
 
