@@ -4,7 +4,10 @@ Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing.
 ## Usage
 1. Execute [**run_pipeline.cmd**](../README.md) (with condition set so .rdata file is generated) if not previously executed
 2. [**Compile R for portable use**] (build_R/README.md) on CHTC cluster machines, if not done previously
-3. Modify the number of jobs to queue by editing the number after 'queue' in **map.sub**. For each phenotype in the input phenotype file, there is one job for each of the mapping_jobs in make_rdata.r, so the number to use here is *# mapping jobs in make_rdata.r* x *# traits in input phenotype file*
+3. Modify the number of jobs to queue by editing the number after 'queue' in **map.sub**. For each phenotype in the input phenotype file, there is one job for each of the mapping_jobs in make_rdata.r, so the number to use here is:
+	
+		(*# mapping jobs in make_rdata.r*) x (*# traits in input phenotype file*)
+	
 4. Copy the following to the Cluster submit server:
 	* **map.sub**
 	* **map.sh**
