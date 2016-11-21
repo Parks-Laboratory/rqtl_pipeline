@@ -51,7 +51,7 @@ The following programs should be installed and exist in the Windows PATH environ
 
 
 Required Python modules:
-* PYODBC
+* [PYODBC] (https://mkleehammer.github.io/pyodbc/)
 
 Install python modules from Windows Command Prompt via:
 	
