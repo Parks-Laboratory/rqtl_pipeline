@@ -12,7 +12,7 @@ make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL ma
 
 		run_pipeline.cmd
 
-	\* Note: Shift+Right-click inside a directory in File explorer and select "Open command window here"
+	\* Note: Shift+Right-click inside a directory in File Explorer and select "Open command window here" to start Windows Command Prompt in current directory
 	
 For interactive mapping:
 
