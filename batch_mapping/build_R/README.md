@@ -8,11 +8,11 @@ Compiles a portable version of the R statistical package plus optional additiona
 	* **R-*X.X.X.*tar.gz**  (where *X.X.X* is the version of R, which must match what is written in **install_r.sh** and **install_r.sub**
 	* **install_packages.R**
 	
-	`scp install_r.sh install_r.sub R-*X.X.X.*tar.gz install_packages.R *username*@submit-3.chtc.wisc.edu`:
+	`scp install_r.sh install_r.sub R-X.X.X.tar.gz install_packages.R username@submit-3.chtc.wisc.edu`:
 
 2. SSH into the submit server
 
-	`ssh *username*@submit-3.chtc.wisc.edu`
+	`ssh username@submit-3.chtc.wisc.edu`
 
 3. Submit the job
 
