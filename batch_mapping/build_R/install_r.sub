@@ -1,16 +1,19 @@
 universe = vanilla
 # Name the log file:
-log = interactive.log
+log = install_r.log
 
 # Name the files where standard output and error should be saved:
-output = process.out
-error = process.err
+output = install_r.out
+error = install_r.err
 
 # If you wish to compile code, you'll need the below lines.
 #  Otherwise, LEAVE THEM OUT if you just want to interactively test!
 +IsBuildJob = true
 requirements = (OpSysAndVer =?= "SL6") && ( IsBuildSlot == true )
 
+executable = install_r.sh
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
 transfer_input_files = R-3.2.5.tar.gz,install_packages.R,install_r.sh
 
 request_cpus = 1
