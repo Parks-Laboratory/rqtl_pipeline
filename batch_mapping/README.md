@@ -2,13 +2,17 @@
 Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing. See this [introduction to running Condor jobs] (http://chtc.cs.wisc.edu/helloworld.shtml) for a primer.
 
 ## Usage
-1. Execute [**run_pipeline.cmd**](../README.md) (with condition set so .rdata file is generated) if not previously executed
-2. [**Compile R for portable use**] (build_R/README.md) on CHTC cluster machines, if not done previously
-3. Modify the number of jobs to queue by editing the number after 'queue' in **map.sub**. For each phenotype in the input phenotype file, there is one job for each of the mapping_jobs in make_rdata.r, so the number to use here is:
+0. Execute [**run_pipeline.cmd**](../README.md) (with condition set so .rdata file is generated) if not previously executed
+0. [**Compile R for portable use**] (build_R/README.md) on CHTC cluster machines, if not done previously
+0. Modify the number of jobs to queue by editing the number after 'queue' in **map.sub**. For each phenotype in the input phenotype file, there is one job for each of the mapping_jobs in make_rdata.r, so the number to use here is:
 	
 		(number of mapping jobs in make_rdata.r) x (number of traits in input phenotype file)
-	
-4. Copy the following to the Cluster submit server:
+0. In **map.sh** on line beginning with "R CMD BATCH", 
+	* set `pdf='TRUE'` to generate a plot of lods and save as pdf
+	* set `summary='TRUE'` to generate .log file with highest lod per chromosome
+	* set `rdata='TRUE'` to generate .rdata file with output of R/QTL scan (use to generate more plots from existing scan)
+
+0. Copy the following to the Cluster submit server:
 	* **map.sub**
 	* **map.sh**
 	* **map.r**
@@ -18,20 +22,20 @@ Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing.
 	
 	`$ scp map.sub map.sh map.r rqtl_inputs.rdata R.tar.gz mkdirs.sh username@submit-3.chtc.wisc.edu:`
 	
-5. SSH into the submit server
+0. SSH into the submit server
 
 	`$ ssh username@submit-3.chtc.wisc.edu`
 
-6. Create directories `runs` and `runs/_logs`
+0. Create directories `runs` and `runs/_logs`
 
 	`$ ./mkdirs.sh`
 
 
-7. Submit the job
+0. Submit the job
 
 	`$ condor_submit map.sub`
 	
-8. Wait for jobs to finish, exit the session, and copy back the results directory
+0. Wait for jobs to finish, exit the session, and copy back the results directory
 
 	```
 	$ exit
