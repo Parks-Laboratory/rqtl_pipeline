@@ -29,7 +29,7 @@ is_binary_indicator = function(col){
 }
 
 #	QTL mapping
-map = function( trait, cross, sex, log_status, covariate_type, covariate_trait ){
+map = function( trait, cross, sex, log_status, covariate_type, covariate_trait, scan_algo, plot, summary, rdata ){
 	pheno_col = cross$pheno[[trait]]
 
 	# log2(0) == -Inf, which would not be good
@@ -52,7 +52,7 @@ map = function( trait, cross, sex, log_status, covariate_type, covariate_trait )
 		if( log_status == 'logged'){
 			if(!(0 %in% covariate) ){
 				covariate = log2(covariate)
-			}else if( is_binary_indicator(pheno_col) ){
+			}else if( is_binary_indicator(covariate) ){
 				sprintf('Trait "%s" is a binary indicator containing the value "0". Values not logged.', covariate_trait)
 			}
 			else{
@@ -61,50 +61,66 @@ map = function( trait, cross, sex, log_status, covariate_type, covariate_trait )
 		}
 
 		if( covariate_type == 'additive' ){
-			scan=scanone(cross, pheno.col = pheno_col, addcovar = covariate)
+			scan=scanone(cross, method=scan_algo, pheno.col = pheno_col, addcovar = covariate)
 		}else if( covariate_type == 'interactive' ){
-			scan=scanone(cross, pheno.col = pheno_col, addcovar = covariate, intcovar = covariate)
+			scan=scanone(cross, method=scan_algo, pheno.col = pheno_col, addcovar = covariate, intcovar = covariate)
 		}else{
 			stop('Error: "', covariate_type, '" is not recognized. Must be either "additive" or "interactive"' )
 		}
 	}else{
 		output_file_naming_template = paste(c( sex, trait, log_status), collapse = '_')
-		scan=scanone(cross, pheno.col = pheno_col )
+		scan=scanone(cross, method=scan_algo, pheno.col = pheno_col )
 	}
 
 	warnings_off()
-	write_results( scan, cross, output_file_naming_template )
+	write_mapping_results( scan, cross, output_file_naming_template, plot, summary, rdata )
 	warnings_on()
 }
 
 # Make files for raw lod scores, a summary of highest scores per chromosome, and lod plot
-write_results = function( scan, cross, naming_template ){
-	lod_file = file( normalizePath( paste(c( output_path, '/', naming_template, '_lods', '.txt' ), collapse='') ), open='wt')
-	log_file = file( normalizePath( paste(c( output_path, '/', naming_template, '.log' ), collapse='') ), open='wt')
-	plot_filename = normalizePath( paste( c(output_path, '/',naming_template, '_lod-plot', '.pdf'), collapse='') )
-
+write_mapping_results = function( scan, cross, naming_template, plot, summary, rdata ){
 	# print column 1 (chromosome #), and column 3 (lod value),
 	# but don't print column 2 (estimated centiMorgans) which is made-up
-	write.table(summary(scan)[,c(1,3)], log_file, append=TRUE, quote=FALSE, sep = ',')
+	lod_file = file( normalizePath( paste(c( output_path, '/', naming_template, '_lods', '.txt' ), collapse='') ), open='wt')
 	write.table(scan[,c(1,3)], lod_file, append=FALSE, quote=FALSE, sep = ',')
-
 	close(lod_file)
-	close(log_file)
-
-	lod_column = scan$lod
-	plot_title = toupper( gsub('_', ' ', naming_template) )
-	pdf( file = plot_filename )	# use pdf for CHTC cluster
-	# png( file = plot_filename, width=1024, height=1024, units='px')		# use png for MS Windows
-	# Plot all lod-scores with values greater than those at 95th percentile
-	num_markers = sum(nmar(cross))
-	minimum_percentile = 1 - (max_markers_to_plot / num_markers)
-	if( minimum_percentile >= 1 ){
-		minimum_percentile = 0
+	if(summary){
+		log_file = file( normalizePath( paste(c( output_path, '/', naming_template, '.log' ), collapse='') ), open='wt', append = TRUE)
+		write.table(summary(scan)[,c(1,3)], log_file, append=TRUE, quote=FALSE, sep = ',')
+		close(log_file)
 	}
-	plot(scan, main=plot_title, ylim=c(quantile(lod_column, probs = minimum_percentile)[[1]],max(lod_column)), bandcol='gray90')
-	dev.off()
 
-	save( list=c('scan'), file=normalizePath( paste(c( output_path, '/', naming_template, '_scan.rdata' ), collapse='')) )
+	if(plot){
+		plot_filename = normalizePath( paste( c(output_path, '/',naming_template, '_lod-plot', '.pdf'), collapse='') )
+		lod_column = scan$lod
+		plot_title = toupper( gsub('_', ' ', naming_template) )
+		pdf( file = plot_filename )	# use pdf for CHTC cluster
+		# png( file = plot_filename, width=1024, height=1024, units='px')		# use png for MS Windows
+		# Plot all lod-scores with values greater than those at 95th percentile
+		num_markers = sum(nmar(cross))
+		minimum_percentile = 1 - (max_markers_to_plot / num_markers)
+		if( minimum_percentile >= 1 ){
+			minimum_percentile = 0
+		}
+		plot(scan, main=plot_title, ylim=c(quantile(lod_column, probs = minimum_percentile)[[1]],max(lod_column)), bandcol='gray90')
+		dev.off()
+	}
+
+	if(rdata){
+		save( list=c('scan'), file=normalizePath( paste(c( output_path, '/', naming_template, '_scan.rdata' ), collapse='')) )
+	}
+
+}
+
+calculate_thresholds = function(cross, trait, scan_algo) {
+	perm = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), n.perm=2000, method=scan_algo)
+	write_threshold_results(summary(perm))
+}
+
+write_threshold_results = function(summary) {
+	threshold_file = file( normalizePath( paste(c( output_path, '/threshold.log' ), collapse='') ), open='wt')
+	write.table(summary, threshold_file, append=TRUE, quote=FALSE)
+	close(threshold_file)
 }
 
 warnings_off = function(){
@@ -152,6 +168,8 @@ if( !dir.exists(output_path) ){
 	}
 }
 
+
+
 # Display information in .Rout file:
 sprintf('chtc_process_number: %s', chtc_process_number)
 sprintf('trait: %s', trait)
@@ -161,8 +179,9 @@ sprintf('covariate_type: %s', covariate_type)
 sprintf('covariate_trait: %s', covariate_trait)
 sprintf('Number of markers: %s', sum(nmar(cross)))
 
+calculate_thresholds(cross, trait, scan_algo)
 
-map( trait, cross, sex, log_status, covariate_type, covariate_trait )
+map( trait, cross, sex, log_status, covariate_type, covariate_trait, scan_algo, plot, summary, rdata )
 
 warnings()
 
