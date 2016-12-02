@@ -19,3 +19,7 @@ Moreover, the importance accorded to a particular p-value depends upon a
 number of factors, including the ultimate goals of the experiment.
 
 (*A Guide to QTL Mapping with R/qtl* - Karl W. Broman, Saunak Sen
+
+
+## R/QTL-usage decisions:
+For QTL-scan with dense markers, Haley-Knott and Expectation-Maximization algorithms will give very similar results. Using H-K may be faster.
