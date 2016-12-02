@@ -8,9 +8,11 @@ Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing.
 	
 		(number of mapping jobs in make_rdata.r) x (number of traits in input phenotype file)
 0. (Optional) In **map.sh** on line beginning with "R CMD BATCH", 
-	* set `pdf='TRUE'` to generate a plot of lods and save as pdf
+	* set `plot='TRUE'` to generate a plot of lods and save as pdf
 	* set `summary='TRUE'` to generate .log file with highest lod per chromosome
 	* set `rdata='TRUE'` to generate .rdata file with output of R/QTL scan (use to generate more plots from existing scan)
+	* set `scan_algo='hk'` or `scan_algo='em'` to specify the algorithm R/QTL will use to calculate LOD values
+	* set `calculate_thresholds='TRUE` to calculate significance LOD thresholds
 
 0. Copy the following to the Cluster submit server:
 	* **map.sub**
