@@ -120,5 +120,7 @@ too many to fit in columns, so must go in rows.
 		already implemented by the database engine (significantly, pivot function).
 		* CON(s): This forces the user to first import all data to database
 		(which will force user to clean up their data and titles first).
-* Are separate files really needed for male/female phenos? Can R/QTL do scanning
-	with only one sex at a time when given both sexes?
+* Create only a single phenotype file.
+	* Currently, there are columns for males and females of each strain. It would be better to have a single column for each strain, 
+	and for each trait in that column, there should be 2 rows, 1 for the male phenotype of that trait and 1 for the female phenotype. 
+	Likewise, the genotype file should then only have 1 column for each strain instead of having duplicate phenotypes.
