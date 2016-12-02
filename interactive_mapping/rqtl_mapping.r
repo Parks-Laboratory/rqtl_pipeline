@@ -7,7 +7,7 @@ library(qtl)
 # Option 1:
 cross = read.cross(
   format='csvsr'
-  , dir='directory/containing/genfile_and_phefile'
+  , crosstype="risib"
   , genfile='main_csvsr_geno.csv'
   , phefile='male_csvsr_pheno.csv'
   , na.strings=c('-')
@@ -19,23 +19,66 @@ cross = read.cross(
 load('rqtl_inputs.rdata')
 
 ######################################################################################################
+##  Mapping using batch job's rdata file (useful for making new plots after mapping on CHTC)
+######################################################################################################
+mapping_job = mapping_jobs[[4]]
+cross = mapping_job$get_cross()
+sex = mapping_job$sex
+log_status = mapping_job$log_status
+covariate_trait = 'sex'
+trait = 'Insulin_pg_ml'
+
+pheno_col = cross$pheno[[trait]]
+covariate = cross$pheno[[covariate_trait]]
+
+# Optional
+pheno_col = log2(pheno_col)
+# covariate = log2(covariate)
+
+# do QTL scan (pick one based on covariate_type)
+scan=scanone(cross, pheno.col = pheno_col)
+scan=scanone(cross, pheno.col = pheno_col, addcovar = covariate)
+scan=scanone(cross, pheno.col = pheno_col, addcovar = covariate, intcovar = covariate)
+
+# used to crop plot
+num_markers = sum(nmar(cross))
+minimum_percentile = 1 - (max_markers_to_plot / num_markers)
+if( minimum_percentile >= 1 ){
+  minimum_percentile = 0
+}
+
+# plot
+lod_column = scan$lod
+plot(scan, main='plot_title', ylim=c(quantile(lod_column, probs = minimum_percentile)[[1]],max(lod_column)), bandcol='gray90')
+plot(scan)
+
+
+######################################################################################################
 ##  Remove markers that are adjacent and duplicates
 ######################################################################################################
 duplicate_markers = unlist(findDupMarkers(cross, exact.only=TRUE, adjacent.only = TRUE))
 cross = drop.markers(cross, duplicate_markers)
 
+
 ######################################################################################################
-##  Figure out why warnings crop up for covariate mapping
+##  General mapping
 ######################################################################################################
-covariate = 'sex'
-trait = 'Insulin_pg_ml'
 cross = calc.genoprob(cross,step=0.01, error.prob = 0.01)
-scan=scanone(cross, pheno.col = log2(cross$pheno[[trait]]), chr = 8 )
-scan=scanone(cross, pheno.col = log2(cross$pheno[[trait]]), addcovar = covariate, chr = 8 )
-scan=scanone(cross, pheno.col = log2(cross$pheno[[trait]]), addcovar = covariate, intcovar = covariate, chr = 8 )
-summary(scan)
-plot(scan, xlab = '(Base Pair Position)/2e6' )
-plot(scan, chr = '8', xlim = c(7e6,2e7), main = 'Chromosome 8', xlab = '(Base Pair Position)/2' )
+trait = 'Insulin_pg_ml'
+covariate_trait = 'sex'
+
+pheno_col = cross$pheno[[trait]]
+covariate = cross$pheno[[covariate_trait]]
+
+# Optional
+pheno_col = log2(pheno_col)
+# covariate = log2(covariate)
+
+# do QTL scan (pick one based on covariate_type)
+scan=scanone(cross, pheno.col = pheno_col)
+scan=scanone(cross, pheno.col = pheno_col, addcovar = covariate)
+scan=scanone(cross, pheno.col = pheno_col, addcovar = covariate, intcovar = covariate)
+
 
 ######################################################################################################
 ##  Examine effects of different step-sizes for male_insulin_step_0.001_error_0.01_chr_8
@@ -49,19 +92,25 @@ summary(scan)
 ######################################################################################################
 ##  Examine lod significance-threshold given by permutation testing
 ######################################################################################################
-trait = 'Weight_0_wks_diet'
+trait = 'Insulin_pg_ml'
 cross = calc.genoprob(cross,step=0.01, error.prob = 0.01, stepwidth = "fixed")
 cross = reduce2grid(cross)
 
-# HK
+# HK (30 minutes per trait, for 50k markers)
+t = proc.time()
 perm_hk = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), n.perm=1000, method="hk")
-scan_hk = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), chr = 8, method = "hk" )
+proc.time() - t
+
+scan_hk = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), method = "hk" )
 summary(perm_hk)
 summary(scan_hk, perms=perm_hk, alpha=0.2, pvalues=TRUE)
 
-# EM
+# EM (12 hours per trait, for 50k markers)
+t = proc.time()
 perm_em = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), n.perm=1000, method="em")
-scan_em = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), chr = 8, method = "em" )
+proc.time() - t
+
+scan_em = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), method = "em" )
 summary(perm_em)
 summary(scan_em, perms=perm_em, alpha=0.2, pvalues=TRUE)
 
