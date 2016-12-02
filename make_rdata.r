@@ -64,15 +64,16 @@ mapping_job = R6Class("mapping_job",
 )
 
 read_data = function(input_path, geno_filename, pheno_filename){
-  return( read.cross(
-    format='csvsr'
-    , dir=input_path
-    , genfile=geno_filename
-    , phefile=pheno_filename
-    , na.strings=c('-')
-    , genotypes=c('A','H','B')
-    , alleles=c('A','B') )
-  )
+	cross = read.cross(
+      format='csvsr'
+      , dir=input_path
+      , genfile=geno_filename
+      , phefile=pheno_filename
+      , na.strings=c('-')
+      , genotypes=c('A','H','B')
+      , alleles=c('A','B')
+	  , crosstype='risib' )
+  return( calc.genoprob(cross, step=0, error.prob=0.002, map.function="c-f") )
 }
 
 ################################################################################
@@ -80,7 +81,7 @@ read_data = function(input_path, geno_filename, pheno_filename){
 ################################################################################
 female_cross = read_data(input_path, geno_filename, female_filename)
 male_cross = read_data(input_path, geno_filename, male_filename)
-hetero_cross = read_data(input_path, geno_filename, hetero_filename)
+# hetero_cross = read_data(input_path, geno_filename, hetero_filename)
 
 traits = scan(traits_filename, what='', sep='\n')
 
@@ -89,7 +90,7 @@ duplicate_markers = unlist(findDupMarkers(female_cross, exact.only=TRUE, adjacen
 
 female_cross = drop.markers(female_cross, duplicate_markers)
 male_cross = drop.markers(male_cross, duplicate_markers)
-hetero_cross = drop.markers(hetero_cross, duplicate_markers)
+# hetero_cross = drop.markers(hetero_cross, duplicate_markers)
 
 # mapping_job$new(cross, sex, log_status, covariate_type, covariate_trait)
 #		cross: R/QTL cross object containing genotype and phenotype information
@@ -102,8 +103,9 @@ hetero_cross = drop.markers(hetero_cross, duplicate_markers)
 # For each trait, do the following tests:
 mapping_jobs = c( mapping_job$new('female', 'logged', NA, NA),
                   mapping_job$new('male', 'logged', NA, NA),
-                  mapping_job$new('hetero', 'logged', 'additive', covariate_trait),
-                  mapping_job$new('hetero', 'logged', 'interactive', covariate_trait)
-)
+				  )
+                #   mapping_job$new('hetero', 'logged', 'additive', covariate_trait),
+                #   mapping_job$new('hetero', 'logged', 'interactive', covariate_trait)
 
-save(list=c('mapping_jobs','female_cross','male_cross','hetero_cross','traits'), file="rqtl_inputs.rdata", compress = TRUE )
+save(list=c('mapping_jobs','female_cross','male_cross','traits'), file="rqtl_inputs.rdata", compress = TRUE )
+# save(list=c('mapping_jobs','female_cross','male_cross','hetero_cross','traits'), file="rqtl_inputs.rdata", compress = TRUE )
