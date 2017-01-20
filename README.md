@@ -2,7 +2,7 @@
 The R/QTL Mapping Pipeline is a collection of scripts that streamline the process of building input files for Karl Broman's quantitative trait loci analysis package for R. The scripts connect to a database containing genotype data, filter markers using PLINK, and finally use this subset of markers along with some phenotype data to build csvsr-formatted input files for R/QTL.
 
 ## Outline
-make PLINK inputs  -->  run PLINK  -->  make R/QTL inputs  -->  perform R/QTL mapping
+make R/QTL phenotype input  -->  make PLINK inputs  -->  run PLINK  -->  make R/QTL genotype input  -->  perform R/QTL mapping
 
 ## Usage
 1. place a copy of [**run_pipeline.cmd**](README_RUN_PIPELINE.md) in directory containing	[**file with phenotype data**](make_rqtl_inputs/README.md#pheno)
