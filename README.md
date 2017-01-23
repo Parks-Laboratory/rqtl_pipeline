@@ -28,7 +28,7 @@ For batch mapping on UW-Madison Cluster:
 * [**run_pipeline.cmd**](README_RUN_PIPELINE.md)
 	* this is the backbone of the pipeline. It makes calls to scripts in the sub-directories and to make_rdata.r
 	* produces directory in which all generated files (including files for R/QTL mapping) are placed
-* **make_rdata.r**
+* [**make_rdata.r**](batch_mapping/README_MAKE_RDATA.R.md)
 	* outputs file for performing mapping on Condor HTC cluster
 	* called by run_pipeline.cmd
 * filter_markers/**make_plink_inputs.py**
