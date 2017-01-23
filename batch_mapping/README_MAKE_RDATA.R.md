@@ -1,3 +1,6 @@
+## Synopsis: 
+Does pre-processing using R/QTL to prevent duplicate work on each node of cluster. A minimal amount of data is then packaged up as an .rdata file which can then be sent along to the nodes.
+
 ## Usage: 
 Open Windows command line in directory containing input files, and do
 
