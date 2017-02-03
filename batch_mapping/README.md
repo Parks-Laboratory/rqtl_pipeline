@@ -1,5 +1,5 @@
 ## Synopsis
-Batch mapping on UW-Madison Condor HTC cluster is accomplished by pre-computing. See this [introduction to running Condor jobs] (http://chtc.cs.wisc.edu/helloworld.shtml) for a primer.
+Batch mapping on UW-Madison Condor HTC cluster is accomplished by using pre-computed R/QTL objects (stored in an .rdata file) and using the unique process ID to index into a list of traits and mapping jobs. Each node of the cluster performs analysis for a unique trait/mapping job pair (e.g. mapping insulin for males). See this [introduction to running Condor jobs] (http://chtc.cs.wisc.edu/helloworld.shtml) for a primer.
 
 ## Usage
 0. Execute [**run_pipeline.cmd**](../README.md) (with condition set so .rdata file is generated) if not previously executed
