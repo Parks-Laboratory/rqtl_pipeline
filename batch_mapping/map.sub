@@ -20,4 +20,4 @@ request_memory = 8GB
 request_disk = 500MB
 
 # Queue will get top queue#/#tests traits to map from traits list file
-queue 584
+queue 292
