@@ -45,7 +45,7 @@ map = function( trait, cross, sex, log_status, covariate_type, covariate_trait, 
 	}
 
 	if( !is.na(covariate_type) ){
-		output_file_naming_template = paste(c( sex, trait, covariate_type, covariate_trait, log_status), collapse = '_')
+		output_file_naming_template = paste(c( sex, trait, covariate_type, covariate_trait), collapse = '.')
 
 		covariate = cross$pheno[[covariate_trait]]	# e.g., sex column
 		# log2(0) == -Inf, which would not be good
@@ -68,25 +68,27 @@ map = function( trait, cross, sex, log_status, covariate_type, covariate_trait, 
 			stop('Error: "', covariate_type, '" is not recognized. Must be either "additive" or "interactive"' )
 		}
 	}else{
-		output_file_naming_template = paste(c( sex, trait, log_status), collapse = '_')
+		output_file_naming_template = paste(c( sex, trait), collapse = '.')
 		scan=scanone(cross, method=scan_algo, pheno.col = pheno_col )
 	}
 
 	warnings_off()
 	write_mapping_results( scan, cross, output_file_naming_template, plot, summary, rdata )
 	warnings_on()
+
+	return(scan)
 }
 
 # Make files for raw lod scores, a summary of highest scores per chromosome, and lod plot
 write_mapping_results = function( scan, cross, naming_template, plot, summary, rdata ){
 	# print column 1 (chromosome #), and column 3 (lod value),
 	# but don't print column 2 (estimated centiMorgans) which is made-up
-	lod_file = file( normalizePath( paste(c( output_path, '/', naming_template, '_lods', '.txt' ), collapse='') ), open='wt')
+	lod_file = file( normalizePath( paste(c( output_path, '/', naming_template, '.txt' ), collapse='') ), open='wt')
 	write.table(scan[,c(1,3)], lod_file, append=FALSE, quote=FALSE, sep = ',')
 	close(lod_file)
 	if(summary){
-		log_file = file( normalizePath( paste(c( output_path, '/', naming_template, '.log' ), collapse='') ), open='wt', append = TRUE)
-		write.table(summary(scan)[,c(1,3)], log_file, append=TRUE, quote=FALSE, sep = ',')
+		log_file = file( normalizePath( paste(c( output_path, '/', naming_template, '.log' ), collapse='') ), open='wt')
+		write.table(summary(scan)[,c(1,3)], log_file, append=FALSE, quote=FALSE, sep = ',')
 		close(log_file)
 	}
 
@@ -113,13 +115,20 @@ write_mapping_results = function( scan, cross, naming_template, plot, summary, r
 }
 
 calculate_thresholds = function(cross, trait, scan_algo) {
-	perm = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), n.perm=2000, method=scan_algo)
-	write_threshold_results(summary(perm))
+	return( scanone(cross, pheno.col = log2(cross$pheno[[trait]]), n.perm=2000, method=scan_algo) )
 }
 
-write_threshold_results = function(summary) {
+write_threshold_results = function(perm, scan, displayThresholds, sexLabel) {
 	threshold_file = file( normalizePath( paste(c( output_path, '/threshold.log' ), collapse='') ), open='wt')
-	write.table(summary, threshold_file, append=TRUE, quote=FALSE)
+	if(displayThresholds){
+		write.table(summary(perm), file=threshold_file, append=TRUE, quote=FALSE)
+	}
+	threshold_summary = summary(scan, perms=perm, alpha=0.05, pvalues=TRUE)
+	if(nrow(threshold_summary > 0)){
+		write("", file=threshold_file, append=TRUE, quote=FALSE)
+		write(sex, file=threshold_file, append=TRUE, quote=FALSE)
+		write.table(threshold_summary, file=threshold_file, append=TRUE, quote=FALSE)
+	}
 	close(threshold_file)
 }
 
@@ -150,8 +159,11 @@ chtc_process_number = as.numeric(chtc_process_number)
 # Global variables:
 #chtc_process_number = 5	 # TODO REMOVE
 
-trait = traits[floor( chtc_process_number / number_jobs ) + 1]
-mapping_job = mapping_jobs[[floor( chtc_process_number %% number_jobs ) + 1]]
+trait_index = floor( chtc_process_number / number_jobs ) + 1
+mapping_job_index = chtc_process_number %% number_jobs + 1
+
+trait = traits[trait_index]
+mapping_job = mapping_jobs[[ mapping_job_index ]]
 cross = mapping_job$get_cross()
 sex = mapping_job$sex
 log_status = mapping_job$log_status
@@ -164,7 +176,7 @@ dir.create(dir_transfered_by_condor)	# Condor will transfer this file back to su
 output_path = paste(c(dir_transfered_by_condor,'/',trait), collapse='')
 if( !dir.exists(output_path) ){
 	if( !dir.create(output_path, recursive=TRUE) ){
-		stop( 'output dir. "', output_path, '" could not be created'	)
+		stop( 'output dir. "', output_path, '" could not be created' )
 	}
 }
 
@@ -179,9 +191,13 @@ sprintf('covariate_type: %s', covariate_type)
 sprintf('covariate_trait: %s', covariate_trait)
 sprintf('Number of markers: %s', sum(nmar(cross)))
 
-calculate_thresholds(cross, trait, scan_algo)
 
-map( trait, cross, sex, log_status, covariate_type, covariate_trait, scan_algo, plot, summary, rdata )
+scan = map( trait, cross, sex, log_status, covariate_type, covariate_trait, scan_algo, plot, summary, rdata )
+
+if(thresholds){
+	perm = calculate_thresholds(cross, trait, scan_algo)
+	write_threshold_results(perm, scan, TRUE, sex)
+}
 
 warnings()
 
