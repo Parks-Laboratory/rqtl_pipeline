@@ -73,7 +73,11 @@ read_data = function(input_path, geno_filename, pheno_filename){
       , genotypes=c('A','H','B')
       , alleles=c('A','B')
 	  , crosstype='risib' )
-  return( calc.genoprob(cross, step=0, error.prob=0.002, map.function="c-f") )
+  # Lots of repeated work if this function is called multiple times with same genotype info.
+  duplicate_markers = unlist(findDupMarkers(cross, exact.only=TRUE, adjacent.only = TRUE))
+  cross = drop.markers(cross, duplicate_markers)
+  cross = calc.genoprob(cross, step=0, off.end = 0, error.prob=0.002, map.function='c-f', stepwidth = 'fixed')
+  return( cross )
 }
 
 ################################################################################
@@ -85,13 +89,6 @@ male_cross = read_data(input_path, geno_filename, male_filename)
 
 traits = scan(traits_filename, what='', sep='\n')
 
-# just looks at genetics, so any cross will return same results
-duplicate_markers = unlist(findDupMarkers(female_cross, exact.only=TRUE, adjacent.only = TRUE))
-
-female_cross = drop.markers(female_cross, duplicate_markers)
-male_cross = drop.markers(male_cross, duplicate_markers)
-# hetero_cross = drop.markers(hetero_cross, duplicate_markers)
-
 # mapping_job$new(cross, sex, log_status, covariate_type, covariate_trait)
 #		cross: R/QTL cross object containing genotype and phenotype information
 #		sex: 'female', 'male', or 'hetero'
@@ -102,8 +99,7 @@ male_cross = drop.markers(male_cross, duplicate_markers)
 #
 # For each trait, do the following tests:
 mapping_jobs = c( mapping_job$new('female', 'logged', NA, NA),
-                  mapping_job$new('male', 'logged', NA, NA),
-				  )
+                  mapping_job$new('male', 'logged', NA, NA) )
                 #   mapping_job$new('hetero', 'logged', 'additive', covariate_trait),
                 #   mapping_job$new('hetero', 'logged', 'interactive', covariate_trait)
 
