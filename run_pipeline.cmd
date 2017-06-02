@@ -63,6 +63,8 @@ cls
 	IF %TRUE% (
 		:: DON'T CHANGE THIS
 		copy make_rdata.r %OUTPUT_DIR%
+		copy run_pipeline.cmd %OUTPUT_DIR%
+		robocopy %rqtl_pipeline%\batch_mapping %OUTPUT_DIR% map.* mkdirs.sh R.tar.gz
 		SET prevDir=%cd%
 		cd %OUTPUT_DIR%
 		R CMD BATCH --no-save make_rdata.r
