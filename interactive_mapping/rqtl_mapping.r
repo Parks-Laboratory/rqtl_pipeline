@@ -64,8 +64,13 @@ cross = drop.markers(cross, duplicate_markers)
 ##  General mapping
 ######################################################################################################
 cross = calc.genoprob(cross,step=0.01, error.prob = 0.01)
+cross = calc.genoprob(cross, step=0, error.prob=0.002, map.function="c-f")
 trait = 'Insulin_pg_ml'
+trait = 'Weight_0_wks_diet'
 covariate_trait = 'sex'
+
+perm_default = scanone(cross_default, pheno.col = log2(cross_default$pheno[[trait]]), n.perm=2000, method="hk")
+perm_cf = scanone(cross_cf, pheno.col = log2(cross_cf$pheno[[trait]]), n.perm=2000, method="hk")
 
 pheno_col = cross$pheno[[trait]]
 covariate = cross$pheno[[covariate_trait]]
@@ -98,7 +103,7 @@ cross = reduce2grid(cross)
 
 # HK (30 minutes per trait, for 50k markers)
 t = proc.time()
-perm_hk = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), n.perm=1000, method="hk")
+perm_hk = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), n.perm=2000, method="hk")
 proc.time() - t
 
 scan_hk = scanone(cross, pheno.col = log2(cross$pheno[[trait]]), method = "hk" )
